@@ -1,0 +1,9 @@
+<tr>
+    <td scope="col">{{ challenge.challenge_time }}</td>
+    <td scope="col">{{ challenge.time_until|timeuntil }}</td>
+    <td scope="col">{{ challenge.challenger }}<br /><small>Rank {{ challenge.challenger_rank }}</small></td>
+    <td scope="col">{{ challenge.opponent }}<br /><small>Rank {{ challenge.opponent_rank }}</small></td>
+    <td scope="col">
+        <a href="{% url 'play_match' pk=challenge.pk %}">Enter Results</a>
+    </td>
+</tr>

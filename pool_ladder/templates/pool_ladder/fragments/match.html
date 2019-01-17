@@ -1,0 +1,11 @@
+<tr>
+    <td scope="col">{{ match.played }}</td>
+    <td scope="col">
+        {{ match.winner }}<br />
+        <small>Rank {% if match.winner == match.challenger %}{{ match.challenger_rank }}{% else %}{{ match.opponent_rank}}{% endif %} > {{ match.winner_rank }}</small>
+    </td>
+    <td scope="col">
+        {{ match.loser }}{% if match.loser_balled %} &#x1F3B1;{% endif %}<br />
+        <small>Rank {% if match.loser == match.challenger %}{{ match.challenger_rank }}{% else %}{{ match.opponent_rank}}{% endif %} > {{ match.loser_rank }}</small>
+    </td>
+</tr>

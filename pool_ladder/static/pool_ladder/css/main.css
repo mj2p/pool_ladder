@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css?family=Staatliches');
+
+#main-title {
+    font-family: 'Staatliches', cursive;
+    font-size: 3.5rem;
+    color: #efefef;
+}
+
+#main-title a:visited {
+    color: #efefef;
+}
+
+#main-title a:hover {
+    color: #efefef;
+    text-decoration: none;
+}
+
+nav {
+    background-color: #090909
+}
+
+nav a {
+    color: #090909;
+    /*padding: 10px;*/
+}
+
+nav a:visited {
+    color: #090909;
+}
+
+nav a:hover {
+    color: #090909;
+    text-decoration: none;
+}
+
+.messages {
+    padding-bottom: 10px;
+}
+
+.content {
+    padding-top: 10px;
+}

@@ -1,0 +1,9 @@
+<tr>
+    <td scope="col">{{ profile.rank }}{% if swag %} &#x{{ swag }}{% endif %}</td>
+    <td scope="col">{{ profile.user.username }}</td>
+    <td scope="col">
+        {% if can_challenge %}
+            <a href="javascript:challenge({{ profile.user.pk }})">Challenge</a>
+        {% endif %}
+    </td>
+</tr>

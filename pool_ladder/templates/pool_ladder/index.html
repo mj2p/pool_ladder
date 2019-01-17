@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% load bootstrap %}
+{% load static %}
+
+{% block title %}{{ ladder_name }}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+            <div class="row">
+                <div class="col">
+                    <table id="challenges" class="table table-striped table-hover table-bordered">
+                        <caption>Challenges</caption>
+                        <thead>
+                            <tr>
+                                <td scope="col">Challenge Time</td>
+                                <td scope="col">Time Until</td>
+                                <td scope="col">Challenger</td>
+                                <td scope="col">Opponent</td>
+                                <td scope="col"></td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+             <div class="row">
+                <div class="col">
+                    <table id="matches" class="table table-striped table-hover table-bordered">
+                        <caption>Played Matches</caption>
+                        <thead>
+                            <tr>
+                                <td scope="col">Played On</td>
+                                <td scope="col">Winner</td>
+                                <td scope="col">Loser</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <table id="users" class="table table-striped table-hover table-bordered">
+                <caption>Ladder</caption>
+                <thead>
+                    <tr>
+                        <td scope="col">Rank</td>
+                        <td scope="col">Username</td>
+                        <td scope="col"></td>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block endbodyjs %}
+    <script type="text/javascript" src="{% static '/channels/js/websocketbridge.js' %}"></script>
+    <script>
+        const WebSocketBridge = new channels.WebSocketBridge();
+        WebSocketBridge.connect('/pool-ladder/');
+
+        function challenge(opponent) {
+            WebSocketBridge.send(
+                {
+                    "message_type": "challenge",
+                    "opponent": opponent
+                }
+            );
+        }
+
+        WebSocketBridge.listen(function(action, stream) {
+            message_type = action['message_type'];
+
+            if (message_type === "clear_users"){
+                $('#users').find("tr:gt(0)").remove();
+            }
+
+            if (message_type === "user_ladder"){
+                $('#users tr:last').after(action['user']);
+            }
+
+            if (message_type === "clear_challenges"){
+                $('#challenges').find("tr:gt(0)").remove();
+            }
+
+            if (message_type === "challenge"){
+                $('#challenges tr:last').after(action['challenge']);
+            }
+
+            if (message_type === "clear_matches"){
+                $('#matches').find("tr:gt(0)").remove();
+            }
+
+            if (message_type === "match"){
+                $('#matches tr:last').after(action['match']);
+            }
+        })
+
+
+    </script>
+{% endblock %}

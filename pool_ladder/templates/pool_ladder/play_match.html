@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% load bootstrap %}
+{% load widget_tweaks %}
+
+{% block title %}Enter Match Results{% endblock %}
+
+{% block content %}
+    <form action="" method="post" class="form-horizontal">
+        <legend>
+            Enter Match Results for {{ match.challenger }} vs. {{ match.opponent }}
+        </legend>
+        {% csrf_token %}
+        <div class="row">
+            <div class="col">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="{{ form.game_0_winner.id_for_label }}">Game 0 Winner</label>
+                            {% if form.game_0_winner.errors %}
+                                {{ form.game_0_winner|add_class:"form-control"|add_class:"is-invalid" }}
+                            {% else %}
+                                {{ form.game_0_winner|add_class:"form-control" }}
+                            {% endif %}
+                            <div class="invalid-feedback">
+                                You need to choose the winner even if a player was balled this game
+                            </div>
+                            {% if form.game_0_winner.help_text %}
+                                <small class="form-text">{{ form.game_0_winner.help_text|safe }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="{{ form.game_0_balled.id_for_label }}">Game 0 Balled</label>
+                            {% if form.game_0_balled.errors %}
+                                {{ form.game_0_balled|add_class:"form-control"|add_class:"is-invalid" }}
+                            {% else %}
+                                {{ form.game_0_balled|add_class:"form-control" }}
+                            {% endif %}
+                            <div class="invalid-feedback">
+                                The same player cannot win and be balled
+                            </div>
+                            {% if form.game_0_balled.help_text %}
+                                <small class="form-text">{{ form.game_0_balled.help_text|safe }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="{{ form.game_1_winner.id_for_label }}">Game 1 Winner</label>
+                            {% if form.game_1_winner.errors %}
+                                {{ form.game_1_winner|add_class:"form-control"|add_class:"is-invalid" }}
+                            {% else %}
+                                {{ form.game_1_winner|add_class:"form-control" }}
+                            {% endif %}
+                            <div class="invalid-feedback">
+                                You need to choose the winner even if a player was balled this game
+                            </div>
+                            {% if form.game_1_winner.help_text %}
+                                <small class="form-text">{{ form.game_1_winner.help_text|safe }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="{{ form.game_1_balled.id_for_label }}">Game 1 Balled</label>
+                            {% if form.game_1_balled.errors %}
+                                {{ form.game_1_balled|add_class:"form-control"|add_class:"is-invalid" }}
+                            {% else %}
+                                {{ form.game_1_balled|add_class:"form-control" }}
+                            {% endif %}
+                            <div class="invalid-feedback">
+                                The same player cannot win and be balled
+                            </div>
+                            {% if form.game_1_balled.help_text %}
+                                <small class="form-text">{{ form.game_1_balled.help_text|safe }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="{{ form.game_2_winner.id_for_label }}">Game 2 Winner</label>
+                            {% if form.game_2_winner.errors %}
+                                {{ form.game_2_winner|add_class:"form-control"|add_class:"is-invalid" }}
+                            {% else %}
+                                {{ form.game_2_winner|add_class:"form-control" }}
+                            {% endif %}
+                            <div class="invalid-feedback">
+                                Game 2 needs a winner
+                            </div>
+                            {% if form.game_2_winner.help_text %}
+                                <small class="form-text">{{ form.game_2_winner.help_text|safe }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="{{ form.game_2_balled.id_for_label }}">Game 2 Balled</label>
+                            {% if form.game_2_balled.errors %}
+                                {{ form.game_2_balled|add_class:"form-control"|add_class:"is-invalid" }}
+                            {% else %}
+                                {{ form.game_2_balled|add_class:"form-control" }}
+                            {% endif %}
+                            <div class="invalid-feedback">
+                                The same player cannot win and be balled
+                            </div>
+                            {% if form.game_2_balled.help_text %}
+                                <small class="form-text">{{ form.game_2_balled.help_text|safe }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-dark">Save</button>
+        </div>
+    </form>
+
+{% endblock %}
