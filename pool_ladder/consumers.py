@@ -23,8 +23,8 @@ class MainConsumer(JsonWebsocketConsumer):
         async_to_sync(self.channel_layer.group_add)('pool_ladder', self.channel_name)
 
         self.send_users({})
-        self.send_challenges({})
-        self.send_matches({})
+        self.send_challenges({'ignore_users': True})
+        self.send_matches({'ignore_users': True})
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
@@ -97,12 +97,13 @@ class MainConsumer(JsonWebsocketConsumer):
                 }
             )
 
-        async_to_sync(get_channel_layer().group_send)(
-            'pool_ladder',
-            {
-                'type': 'send.users'
-            }
-        )
+        if not event.get('ignore_users'):
+            async_to_sync(get_channel_layer().group_send)(
+                'pool_ladder',
+                {
+                    'type': 'send.users'
+                }
+            )
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
@@ -129,12 +130,13 @@ class MainConsumer(JsonWebsocketConsumer):
                 }
             )
 
-        async_to_sync(get_channel_layer().group_send)(
-            'pool_ladder',
-            {
-                'type': 'send.users'
-            }
-        )
+        if not event.get('ignore_users'):
+            async_to_sync(get_channel_layer().group_send)(
+                'pool_ladder',
+                {
+                    'type': 'send.users'
+                }
+            )
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
