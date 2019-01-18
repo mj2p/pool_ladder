@@ -83,8 +83,12 @@ class MainConsumer(JsonWebsocketConsumer):
                     'message_type': 'challenge',
                     'challenge': render_to_string(
                         'pool_ladder/fragments/challenge.html',
-                        {'challenge': challenge}
-                    )
+                        {
+                            'challenge': challenge,
+                            'logged_in_user': self.scope["user"].username
+                        }
+                    ),
+
                 }
             )
 
