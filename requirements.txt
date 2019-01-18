@@ -1,10 +1,11 @@
+boto3
 bpython
 django
 django-bootstrap-form
 django-registration
+django-storages
 django-widget-tweaks
 dj-database-url
 channels
 channels_redis
 pandas
-whitenoise
