@@ -4,6 +4,7 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
+from django.db.models import Max
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 
@@ -46,7 +47,7 @@ class MainConsumer(JsonWebsocketConsumer):
         # clear the table
         self.send(json.dumps({'message_type': 'clear_users'}))
 
-        max = UserProfile.objects.all().count()
+        max = UserProfile.objects.aggregate(max_rank=Max('rank'))
 
         for profile in UserProfile.objects.all():
             self.send_json(
@@ -57,7 +58,11 @@ class MainConsumer(JsonWebsocketConsumer):
                         {
                             'profile': profile,
                             'can_challenge': profile.can_challenge(self.scope["user"]),
-                            'swag': '1f478' if profile.rank == 1 else '1F4A9;' if profile.rank == max else ''
+                            'swag': (
+                                '1f478' if profile.rank == 1
+                                else '1F4A9;' if profile.rank == max['max_rank']
+                                else ''
+                            )
                         }
                     )
                 }
@@ -95,6 +100,13 @@ class MainConsumer(JsonWebsocketConsumer):
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
             {
+                'type': 'send.users'
+            }
+        )
+
+        async_to_sync(get_channel_layer().group_send)(
+            'pool_ladder',
+            {
                 'type': 'check.challenges'
             }
         )
@@ -116,6 +128,13 @@ class MainConsumer(JsonWebsocketConsumer):
                     )
                 }
             )
+
+        async_to_sync(get_channel_layer().group_send)(
+            'pool_ladder',
+            {
+                'type': 'send.users'
+            }
+        )
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
