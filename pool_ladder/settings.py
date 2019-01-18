@@ -9,13 +9,17 @@ https://docs.djangoproject.com/en/2.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
-
+import json
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = os.environ.copy()
+
+if os.path.exists('.env'):
+    env = json.load(open('.env'))
+
 SECRET_KEY = env['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -133,6 +137,8 @@ CHANNEL_LAYERS = {
 }
 
 LADDER_NAME = env['LADDER_NAME']
+
+REGISTRATION_OPEN = True
 
 # Configure Django App for Heroku.
 import django_heroku

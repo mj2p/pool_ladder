@@ -26,11 +26,14 @@ class UserProfile(models.Model):
         """
         determine if the provided user can challenge this user
         """
-        return (
-                challenger.userprofile.rank > self.rank >= (challenger.userprofile.rank - 2)
-                and self.is_available
-                and challenger.userprofile.is_available
-        )
+        try:
+            return (
+                    challenger.userprofile.rank > self.rank >= (challenger.userprofile.rank - 2)
+                    and self.is_available
+                    and challenger.userprofile.is_available
+            )
+        except UserProfile.DoesNotExist:
+            return False
 
     def update_rank(self, rank, balled=False):
         """

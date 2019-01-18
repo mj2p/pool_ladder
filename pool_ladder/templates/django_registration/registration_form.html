@@ -2,14 +2,13 @@
 
 {% load bootstrap %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Register{% endblock %}
 
 {% block content %}
-  <h2>Login</h2>
-  <h5>or <a href="{% url 'django_registration_register' %}">Register</a></h5>
+  <h2>Register</h2>
   <form method="post">
     {% csrf_token %}
     {{ form|bootstrap_horizontal }}
-    <button type="submit">Login</button>
+    <button type="submit">Register</button>
   </form>
 {% endblock %}
