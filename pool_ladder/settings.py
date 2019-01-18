@@ -140,4 +140,4 @@ REGISTRATION_OPEN = True
 
 # Configure Django App for Heroku.
 import django_heroku
-django_heroku.settings(locals(), databases=)
+django_heroku.settings(locals(), databases=False)
