@@ -1,6 +1,7 @@
 boto3
 bpython
 django
+django-amazon-ses
 django-bootstrap-form
 django-registration
 django-storages
@@ -10,3 +11,5 @@ channels
 channels_redis
 pandas
 psycopg2-binary
+requests[security]
+

@@ -2,7 +2,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import Q, Max
+from django.db.models import Q
 from django.utils.timezone import now
 from pandas.tseries.offsets import BDay
 
@@ -10,6 +10,7 @@ from pandas.tseries.offsets import BDay
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     rank = models.IntegerField(default=0)
+    slack_id = models.CharField(max_length=255, blank=True, null=True)
 
     @property
     def is_available(self):
@@ -136,6 +137,29 @@ class Match(models.Model):
                     'type': 'send.challenges'
                 }
             )
+
+            # Notify the user by email
+            if self.opponent.email:
+                async_to_sync(get_channel_layer().group_send)(
+                    'pool_ladder',
+                    {
+                        'type': 'email.notification',
+                        'email': self.opponent.email,
+                        'challenger': self.challenger.username,
+                        'time_until': self.time_until.strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                )
+
+            if self.opponent.userprofile.slack_id:
+                async_to_sync(get_channel_layer().group_send)(
+                    'pool_ladder',
+                    {
+                        'type': 'slack.notification',
+                        'slack_name': self.opponent.userprofile.slack_id,
+                        'challenger': self.challenger.username,
+                        'time_until': self.time_until.strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                )
 
     @property
     def loser_balled(self):

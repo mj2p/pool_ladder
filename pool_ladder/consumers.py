@@ -1,9 +1,12 @@
 import json
 
+import requests
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.db.models import Max
 from django.template.loader import render_to_string
 from django.utils.timezone import now
@@ -204,3 +207,48 @@ class MainConsumer(JsonWebsocketConsumer):
 
                 challenge.set_winner_and_loser()
                 challenge.save()
+
+    @staticmethod
+    def email_notification(event):
+        """
+        send a challenge by email
+        """
+        if settings.FROM_EMAIL:
+            send_mail(
+                'Pool Ladder Challenge',
+                '{} has challenged you to a {} match.\n'
+                'It needs to be played by {} or you will forfeit'.format(
+                    event.get('challenger'),
+                    settings.LADDER_NAME,
+                    event.get('time_until')
+                ),
+                settings.FROM_EMAIL,
+                [
+                    event.get('email')
+                ],
+                fail_silently=True,
+            )
+            print('notified by email')
+
+    @staticmethod
+    def slack_notification(event):
+        """
+        Send challenge notification by slack
+        """
+        if settings.SLACK_WEBHOOK_URL:
+            requests.post(
+                url=settings.SLACK_WEBHOOK_URL,
+                headers={'Content-Type': 'application/json'},
+                data=json.dumps(
+                    {
+                        'text': '<@{}> You have been challenged to a {} match by {}.\n'
+                                'You need to play the match by {} or you will forfeit'.format(
+                                    event['slack_name'],
+                                    settings.LADDER_NAME,
+                                    event.get('challenger'),
+                                    event.get('time_until')
+                                )
+                    }
+                )
+            )
+            print('notified by slack')
