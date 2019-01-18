@@ -128,7 +128,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [env.get('REDIS_URL')],
+            "hosts": [env('REDIS_URL')],
         },
     },
 }
@@ -136,3 +136,7 @@ CHANNEL_LAYERS = {
 LADDER_NAME = env['LADDER_NAME']
 
 REGISTRATION_OPEN = True
+
+# Configure Django App for Heroku.
+import django_heroku
+django_heroku.settings(locals())

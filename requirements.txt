@@ -1,6 +1,7 @@
 bpython
 django
 django-bootstrap-form
+django_heroku
 django-registration
 django-widget-tweaks
 channels
