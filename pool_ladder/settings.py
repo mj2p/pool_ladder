@@ -28,6 +28,7 @@ SECRET_KEY = env['SECRET_KEY']
 DEBUG = env.get('DEBUG', False)
 
 ALLOWED_HOSTS = [
+    '127.0.0.1',
     'pool-ladder.herokuapp.com'
 ]
 
@@ -125,7 +126,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 LOGIN_REDIRECT_URL = 'index'
 LOGIN_URL = 'login'
@@ -147,3 +147,5 @@ AWS_ACCESS_KEY_ID = env['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = env['AWS_SECRET_ACCESS_KEY']
 AWS_STORAGE_BUCKET_NAME = env['AWS_STORAGE_BUCKET_NAME']
 AWS_AUTO_CREATE_BUCKET = True
+AWS_QUERYSTRING_AUTH = False
+AWS_DEFAULT_ACL = 'public-read'
