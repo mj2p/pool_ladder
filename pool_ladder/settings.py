@@ -144,6 +144,4 @@ REGISTRATION_OPEN = True
 
 # Configure Django App for Heroku.
 import django_heroku
-config = locals()
-config['CONN_MAX_AGE'] = None
-django_heroku.settings(config)
+django_heroku.settings(locals(), databases=)
