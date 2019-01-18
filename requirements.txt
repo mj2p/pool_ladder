@@ -1,9 +1,10 @@
 bpython
 django
 django-bootstrap-form
-django_heroku
 django-registration
 django-widget-tweaks
+dj-database-url
 channels
 channels_redis
 pandas
+whitenoise
