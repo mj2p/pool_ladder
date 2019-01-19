@@ -12,4 +12,4 @@ channels_redis
 pandas
 psycopg2-binary
 requests[security]
-
+service_identity
