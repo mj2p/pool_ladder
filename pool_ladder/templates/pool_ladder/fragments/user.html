@@ -8,6 +8,8 @@
             table-warning
         {% elif profile.movement == 2 %}
             table-danger
+        {% elif profile.movement == 100 %}
+            table-dark
         {% endif %}"
     scope="col">
         {{ profile.rank }}{% if swag %} &#x{{ swag }}{% endif %}
