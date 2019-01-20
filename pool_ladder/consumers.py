@@ -222,13 +222,12 @@ class MainConsumer(JsonWebsocketConsumer):
                     settings.LADDER_NAME,
                     event.get('time_until')
                 ),
-                settings.FROM_EMAIL,
+                '<{}>{}'.format(settings.FROM_EMAIL, settings.LADDER_NAME),
                 [
                     event.get('email')
-                ],
-                fail_silently=True,
+                ]
             )
-            print('notified by email')
+            print('notified {} by email'.format(event.get('email')))
 
     @staticmethod
     def slack_notification(event):
@@ -241,13 +240,7 @@ class MainConsumer(JsonWebsocketConsumer):
                 headers={'Content-Type': 'application/json'},
                 data=json.dumps(
                     {
-                        'text': '<@{}> You have been challenged to a {} match by {}.\n'
-                                'You need to play the match by {} or you will forfeit'.format(
-                                    event['slack_name'],
-                                    settings.LADDER_NAME,
-                                    event.get('challenger'),
-                                    event.get('time_until')
-                                )
+                        'text': event.get('message')
                     }
                 )
             )

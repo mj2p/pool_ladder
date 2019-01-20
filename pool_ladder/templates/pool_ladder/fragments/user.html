@@ -1,5 +1,17 @@
 <tr>
-    <td scope="col">{{ profile.rank }}{% if swag %} &#x{{ swag }}{% endif %}</td>
+    <td class="
+        {% if profile.movement == -2 %}
+            table-success
+        {% elif profile.movement == -1 %}
+            table-info
+        {% elif profile.movement == 1 %}
+            table-warning
+        {% elif profile.movement == 2 %}
+            table-danger
+        {% endif %}"
+    scope="col">
+        {{ profile.rank }}{% if swag %} &#x{{ swag }}{% endif %}
+    </td>
     <td scope="col">{{ profile.user.username }}</td>
     <td scope="col">
         {% if can_challenge %}

@@ -17,7 +17,7 @@ class PlayMatch(LoginRequiredMixin, View):
     def get(self, request, pk):
         match = get_object_or_404(Match, pk=pk)
         form = MatchForm(match_pk=match.pk)
-        return render(request, 'pool_ladder/play_match.html', {'match': match, 'form': form})
+        return render(request, 'pool_ladder/play_match.html', {'match': match, 'form': form, 'games': [0, 1 , 2]})
 
     def post(self, request, pk):
         match = get_object_or_404(Match, pk=pk)

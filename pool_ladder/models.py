@@ -1,8 +1,9 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.utils.timezone import now
 from pandas.tseries.offsets import BDay
 
@@ -11,6 +12,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     rank = models.IntegerField(default=0)
     slack_id = models.CharField(max_length=255, blank=True, null=True)
+    movement = models.IntegerField(default=0)
 
     @property
     def is_available(self):
@@ -42,24 +44,22 @@ class UserProfile(models.Model):
         If balled is True set rank to bottom and move everyone else below rank up
         """
         if balled:
-            print('balled at rank', rank)
 
-            # get all profiles below 'rank' (the losers rank and move them up 1
+            # get all profiles below 'rank' (the losers rank) and move them up 1
             for profile in UserProfile.objects.filter(rank__gt=rank):
-                print('updating', profile, '>', profile.rank - 1)
                 profile.rank -= 1
                 profile.save()
 
             # get current maximum rank
-            bottom = UserProfile.objects.all().count()
+            max = UserProfile.objects.aggregate(max_rank=Max('rank'))
+            self.rank = max['max_rank']
 
-            self.rank = bottom
+            # set movement to 100 (balled)
+            self.movement = 100
             self.save()
-
-            print('set to', self.rank)
-
             return
 
+        self.movement = rank - self.rank
         self.rank = rank
         self.save()
 
@@ -116,6 +116,7 @@ class Match(models.Model):
 
     class Meta:
         ordering = ['-challenge_time']
+        verbose_name_plural = "matches"
 
     def __str__(self):
         return '{}: {} vs {}'.format(self.challenge_time, self.challenger, self.opponent)
@@ -138,7 +139,7 @@ class Match(models.Model):
                 }
             )
 
-            # Notify the user by email
+            # Notify the opponent of the challenge
             if self.opponent.email:
                 async_to_sync(get_channel_layer().group_send)(
                     'pool_ladder',
@@ -150,16 +151,27 @@ class Match(models.Model):
                     }
                 )
 
-            if self.opponent.userprofile.slack_id:
-                async_to_sync(get_channel_layer().group_send)(
-                    'pool_ladder',
-                    {
-                        'type': 'slack.notification',
-                        'slack_name': self.opponent.userprofile.slack_id,
-                        'challenger': self.challenger.username,
-                        'time_until': self.time_until.strftime('%Y-%m-%d %H:%M:%S')
-                    }
-                )
+            async_to_sync(get_channel_layer().group_send)(
+                'pool_ladder',
+                {
+                    'type': 'slack.notification',
+                    'message': '{} You have been challenged to a {} match by {}.\n'
+                               'You need to play the match by {} or you will forfeit'.format(
+                                    (
+                                        '<@{}>'.format(self.opponent.userprofile.slack_id)
+                                        if self.opponent.userprofile.slack_id
+                                        else self.opponent.username
+                                    ),
+                                    settings.LADDER_NAME,
+                                    (
+                                        '<@{}>'.format(self.challenger.userprofile.slack_id)
+                                        if self.challenger.userprofile.slack_id
+                                        else self.challenger.username
+                                    ),
+                                    self.time_until.strftime('%Y-%m-%d %H:%M:%S')
+                                )
+                }
+            )
 
     @property
     def loser_balled(self):
@@ -249,6 +261,18 @@ class Match(models.Model):
         self.loser_rank = self.loser.userprofile.rank
 
         self.save()
+
+        async_to_sync(get_channel_layer().group_send)(
+            'pool_ladder',
+            {
+                'type': 'slack.notification',
+                'message': '{} has beaten {}!'.format(
+                               self.winner,
+                               self.loser
+                           )
+            }
+        )
+
         return
 
 

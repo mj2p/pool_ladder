@@ -40,3 +40,32 @@ nav a:hover {
 .content {
     padding-top: 10px;
 }
+
+#logout {
+    color: #efefef;
+    text-decoration: none;
+}
+
+/**
+   Movement
+**/
+
+.movement_-2 {
+    border: 2px green solid
+}
+
+.movement_-1 {
+    border: 1px green solid
+}
+
+.movement_0 {
+    border: 1px yellow solid
+}
+
+.movement_1 {
+    border: 1px red solid
+}
+
+.movement_2 {
+    border: 2px red solid
+}
