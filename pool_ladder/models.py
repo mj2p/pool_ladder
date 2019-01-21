@@ -262,17 +262,6 @@ class Match(models.Model):
 
         self.save()
 
-        async_to_sync(get_channel_layer().group_send)(
-            'pool_ladder',
-            {
-                'type': 'slack.notification',
-                'message': '{} has beaten {}!'.format(
-                               self.winner,
-                               self.loser
-                           )
-            }
-        )
-
         return
 
 
