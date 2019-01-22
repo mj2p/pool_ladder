@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.conf import settings
@@ -17,13 +19,52 @@ class UserProfile(models.Model):
     @property
     def is_available(self):
         """
-        determine if this user has any open challenges
+        determine if this user has any open challenges or has played a match in the last 4 hours
         """
-        return Match.objects.filter(
+        has_open_challenge = Match.objects.filter(
             played__isnull=True
         ).filter(
             Q(challenger=self.user) | Q(opponent=self.user)
-        ).count() == 0
+        ).count() > 0
+
+        if not has_open_challenge and not self.in_cool_down:
+            return True
+
+        return False
+
+    @property
+    def last_played_match(self):
+        """
+        return the last match this user was involved in
+        """
+        return Match.objects.filter(
+            played__isnull=False
+        ).filter(
+            Q(challenger=self.user) | Q(opponent=self.user)
+        ).order_by(
+            'played'
+        ).first()
+
+    @property
+    def in_cool_down(self):
+        """
+        Determine if the player is in their cool down period
+        """
+        in_cool_down = False
+
+        if self.last_played_match:
+            in_cool_down = (now() - self.last_played_match.played) <= timedelta(hours=4)
+
+        return in_cool_down
+
+    @property
+    def time_available(self):
+        """
+        Return the time the player will become available
+        """
+        if self.last_played_match:
+            return self.last_played_match.played + timedelta(hours=4)
+        return None
 
     def can_challenge(self, challenger):
         """
