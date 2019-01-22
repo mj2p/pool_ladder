@@ -245,7 +245,7 @@ class Match(models.Model):
                 game_wins['opponent'] += 1
 
         # at this point it's down to a best of 3
-        if game_wins['challenger'] == 2:
+        if game_wins['challenger'] >= 2:
             self.winner = self.challenger
             self.loser = self.opponent
         else:

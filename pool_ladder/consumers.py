@@ -122,7 +122,7 @@ class MainConsumer(JsonWebsocketConsumer):
         # clear the table
         self.send(json.dumps({'message_type': 'clear_matches'}))
 
-        for match in Match.objects.exclude(played__isnull=True):
+        for match in Match.objects.exclude(played__isnull=True).order_by('-played'):
             self.send_json(
                 {
                     'message_type': 'match',
