@@ -115,7 +115,7 @@ class Match(models.Model):
     played = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-challenge_time']
+        ordering = ['challenge_time']
         verbose_name_plural = "matches"
 
     def __str__(self):
