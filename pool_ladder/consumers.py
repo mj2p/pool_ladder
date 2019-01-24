@@ -7,6 +7,7 @@ from channels.layers import get_channel_layer
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
+from django.core.paginator import Paginator
 from django.db.models import Max
 from django.template.loader import render_to_string
 from django.utils.timezone import now
@@ -122,7 +123,9 @@ class MainConsumer(JsonWebsocketConsumer):
         # clear the table
         self.send(json.dumps({'message_type': 'clear_matches'}))
 
-        for match in Match.objects.exclude(played__isnull=True).order_by('-played'):
+        matches = Match.objects.exclude(played__isnull=True).order_by('-played')
+
+        for match in Paginator(matches, 10).get_page(1):
             self.send_json(
                 {
                     'message_type': 'match',
