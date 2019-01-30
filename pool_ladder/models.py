@@ -21,16 +21,21 @@ class UserProfile(models.Model):
         """
         determine if this user has any open challenges or has played a match in the last 4 hours
         """
-        has_open_challenge = Match.objects.filter(
+        if not self.has_open_challenge and not self.in_cool_down:
+            return True
+
+        return False
+
+    @property
+    def has_open_challenge(self):
+        """
+        return Terue oif this user is in a match not yet played
+        """
+        return Match.objects.filter(
             played__isnull=True
         ).filter(
             Q(challenger=self.user) | Q(opponent=self.user)
         ).count() > 0
-
-        if not has_open_challenge and not self.in_cool_down:
-            return True
-
-        return False
 
     @property
     def last_played_match(self):
