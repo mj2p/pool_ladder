@@ -28,5 +28,11 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
     path('', views.IndexView.as_view(), name='index'),
-    path('play/<int:pk>', views.PlayMatch.as_view(), name='play_match')
+    path('play/<int:pk>', views.PlayMatch.as_view(), name='play_match'),
+
+    path('match/<int:pk>', views.MatchView.as_view(), name='match_detail'),
+
+    path('ladder/datatable', views.LadderDataTablesView.as_view(), name='ladder_datatable'),
+    path('challenge/datatable', views.ChallengesDataTablesView.as_view(), name='challenge_datatable'),
+    path('match/datatable', views.PlayedMatchesDataTablesView.as_view(), name='match_datatable')
 ]

@@ -1,0 +1,2 @@
+{{ match.winner }}<br />
+<small>Rank {% if match.winner == match.challenger %}{{ match.challenger_rank }}{% else %}{{ match.opponent_rank}}{% endif %} > {{ match.winner_rank }}</small>

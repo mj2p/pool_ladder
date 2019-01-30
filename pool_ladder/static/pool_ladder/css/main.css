@@ -33,6 +33,10 @@ nav a:hover {
     text-decoration: none;
 }
 
+thead {
+    color: #efefef;
+}
+
 .messages {
     padding-bottom: 10px;
 }

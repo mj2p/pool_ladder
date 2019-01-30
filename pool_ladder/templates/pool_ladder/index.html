@@ -10,9 +10,9 @@
         <div class="col">
             <div class="row">
                 <div class="col">
-                    <table id="challenges" class="table table-striped table-hover table-bordered">
+                    <table id="challenges" class="table table-striped table-hover table-bordered bg-light">
                         <caption>Challenges</caption>
-                        <thead class="thead-dark bg-light">
+                        <thead class="bg-dark">
                             <tr>
                                 <td scope="col">Challenge Time</td>
                                 <td scope="col">Time Until</td>
@@ -28,9 +28,9 @@
             </div>
              <div class="row">
                 <div class="col">
-                    <table id="matches" class="table table-striped table-hover table-bordered">
+                    <table id="matches" class="table table-striped table-hover table-bordered bg-light">
                         <caption>Played Matches</caption>
-                        <thead class="thead-dark bg-light">
+                        <thead class="bg-dark">
                             <tr>
                                 <td scope="col">Played On</td>
                                 <td scope="col">Winner</td>
@@ -44,9 +44,9 @@
             </div>
         </div>
         <div class="col">
-            <table id="users" class="table table-striped table-hover table-bordered thead-dark">
+            <table id="users" class="table table-striped table-hover table-bordered thead-dark bg-light">
                 <caption>Ladder</caption>
-                <thead class="thead-dark bg-light">
+                <thead class="bg-dark">
                     <tr>
                         <td scope="col">Rank</td>
                         <td scope="col">Username</td>
@@ -63,6 +63,64 @@
 {% block endbodyjs %}
     <script type="text/javascript" src="{% static '/channels/js/websocketbridge.js' %}"></script>
     <script>
+        $(document).ready(function() {
+            $('#challenges').DataTable(
+                {
+                    "paging": false,
+                    "searching": false,
+                    "info": false,
+                    "serverSide": true,
+                    "ajax": "{% url 'challenge_datatable' %}",
+                    "columns": [
+                        { "name": "challenge_time", width: "40%" },
+                        { "name": "time_until", width: "30%", "orderable": false },
+                        { "name": "challenger", width: "10%", "orderable": false },
+                        { "name": "opponent", width: "10%", "orderable": false },
+                        { "name": "action", width: "10%", "orderable": false }
+                    ],
+                    "order": [[ 0, 'asc' ]]
+                }
+            );
+        } );
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#matches').DataTable(
+                {
+                    "pagingType": "full",
+                    "searching": false,
+                    "serverSide": true,
+                    "ajax": "{% url 'match_datatable' %}",
+                    "columns": [
+                        { "name": "played", width: "50%" },
+                        { "name": "winner", width: "25%", "orderable": false },
+                        { "name": "loser", width: "25%", "orderable": false }
+                    ],
+                    "order": [[ 0, 'desc' ]]
+                }
+            );
+        } );
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#users').DataTable(
+                {
+                    "paging": false,
+                    "searching": false,
+                    "info": false,
+                    "serverSide": true,
+                    "ajax": "{% url 'ladder_datatable' %}",
+                    "columns": [
+                        { "name": "rank", width: "20%" },
+                        { "name": "user", width: "30%", "orderable": false },
+                        { "name": "available", width: "50%", "orderable": false }
+                    ],
+                    "order": [[ 0, 'asc' ]]
+                }
+            );
+        } );
+    </script>
+    <script>
         const WebSocketBridge = new channels.WebSocketBridge();
         WebSocketBridge.connect('/pool-ladder/');
 
@@ -78,28 +136,16 @@
         WebSocketBridge.listen(function(action, stream) {
             message_type = action['message_type'];
 
-            if (message_type === "clear_users"){
-                $('#users').find("tr:gt(0)").remove();
+            if (message_type === "users"){
+                $('#users').DataTable().draw('page');
             }
 
-            if (message_type === "user_ladder"){
-                $('#users tr:last').after(action['user']);
+            if (message_type === "challenges"){
+                $('#challenges').DataTable().draw('page');
             }
 
-            if (message_type === "clear_challenges"){
-                $('#challenges').find("tr:gt(0)").remove();
-            }
-
-            if (message_type === "challenge"){
-                $('#challenges tr:last').after(action['challenge']);
-            }
-
-            if (message_type === "clear_matches"){
-                $('#matches').find("tr:gt(0)").remove();
-            }
-
-            if (message_type === "match"){
-                $('#matches tr:last').after(action['match']);
+            if (message_type === "matches"){
+                $('#matches').DataTable().draw('page');
             }
         })
 

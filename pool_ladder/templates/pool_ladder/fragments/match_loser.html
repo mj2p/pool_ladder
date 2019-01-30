@@ -1,0 +1,2 @@
+{{ match.loser }}{% if match.loser_balled %} &#x1F3B1;{% endif %}<br />
+<small>Rank {% if match.loser == match.challenger %}{{ match.challenger_rank }}{% else %}{{ match.opponent_rank}}{% endif %} > {{ match.loser_rank }}</small>

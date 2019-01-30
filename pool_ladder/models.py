@@ -40,10 +40,10 @@ class UserProfile(models.Model):
         return Match.objects.filter(
             played__isnull=False
         ).filter(
-            Q(challenger=self.user) | Q(opponent=self.user)
+            Q(opponent=self.user) | Q(challenger=self.user)
         ).order_by(
             'played'
-        ).first()
+        ).last()
 
     @property
     def in_cool_down(self):
@@ -65,6 +65,13 @@ class UserProfile(models.Model):
         if self.last_played_match:
             return self.last_played_match.played + timedelta(hours=4)
         return None
+
+    @property
+    def swag(self):
+        if self.rank == 1:
+            return '1f478'
+        if self.rank == UserProfile.objects.aggregate(max_rank=Max('rank'))['max_rank']:
+            return '1F4A9'
 
     def can_challenge(self, challenger):
         """
@@ -172,47 +179,49 @@ class Match(models.Model):
                     'type': 'send.matches'
                 }
             )
-        else:
-            async_to_sync(get_channel_layer().group_send)(
-                'pool_ladder',
+            return
+
+        # this is a new challenge
+        async_to_sync(get_channel_layer().group_send)(
+            'pool_ladder',
+            {
+                'type': 'send.challenges'
+            }
+        )
+
+        # Notify the opponent of the challenge
+        if self.opponent.email:
+            async_to_sync(get_channel_layer().send)(
+                'notifications',
                 {
-                    'type': 'send.challenges'
+                    'type': 'email',
+                    'email': self.opponent.email,
+                    'challenger': self.challenger.username,
+                    'time_until': self.time_until.strftime('%Y-%m-%d %H:%M:%S')
                 }
             )
 
-            # Notify the opponent of the challenge
-            if self.opponent.email:
-                async_to_sync(get_channel_layer().group_send)(
-                    'pool_ladder',
-                    {
-                        'type': 'email.notification',
-                        'email': self.opponent.email,
-                        'challenger': self.challenger.username,
-                        'time_until': self.time_until.strftime('%Y-%m-%d %H:%M:%S')
-                    }
-                )
-
-            async_to_sync(get_channel_layer().group_send)(
-                'pool_ladder',
-                {
-                    'type': 'slack.notification',
-                    'message': '{} You have been challenged to a {} match by {}.\n'
-                               'You need to play the match by {} or you will forfeit'.format(
-                                    (
-                                        '<@{}>'.format(self.opponent.userprofile.slack_id)
-                                        if self.opponent.userprofile.slack_id
-                                        else self.opponent.username
-                                    ),
-                                    settings.LADDER_NAME,
-                                    (
-                                        '<@{}>'.format(self.challenger.userprofile.slack_id)
-                                        if self.challenger.userprofile.slack_id
-                                        else self.challenger.username
-                                    ),
-                                    self.time_until.strftime('%Y-%m-%d %H:%M:%S')
-                                )
-                }
-            )
+        async_to_sync(get_channel_layer().send)(
+            'notifications',
+            {
+                'type': 'slack',
+                'message': '{} You have been challenged to a {} match by {}.\n'
+                           'You need to play the match by {} or you will forfeit'.format(
+                                (
+                                    '<@{}>'.format(self.opponent.userprofile.slack_id)
+                                    if self.opponent.userprofile.slack_id
+                                    else self.opponent.username
+                                ),
+                                settings.LADDER_NAME,
+                                (
+                                    '<@{}>'.format(self.challenger.userprofile.slack_id)
+                                    if self.challenger.userprofile.slack_id
+                                    else self.challenger.username
+                                ),
+                                self.time_until.strftime('%Y-%m-%d %H:%M:%S')
+                            )
+            }
+        )
 
     @property
     def loser_balled(self):
@@ -302,6 +311,17 @@ class Match(models.Model):
         self.loser_rank = self.loser.userprofile.rank
 
         self.save()
+
+        async_to_sync(get_channel_layer().send)(
+            'notifications',
+            {
+                'type': 'slack',
+                'message': '{} has beaten {}!'.format(
+                    self.winner,
+                    self.loser
+                )
+            }
+        )
 
         return
 

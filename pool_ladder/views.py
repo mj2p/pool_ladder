@@ -1,16 +1,28 @@
+from math import ceil
+
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.template import Template, Context
+from django.template.loader import get_template
 from django.views import View
+from django.views.generic import DetailView
 
 from pool_ladder.forms import MatchForm
-from pool_ladder.models import Match
+from pool_ladder.models import Match, UserProfile
 
 
 class IndexView(LoginRequiredMixin, View):
     def get(self, request):
         return render(request, 'pool_ladder/index.html', {'ladder_name': settings.LADDER_NAME})
+
+
+class MatchView(DetailView):
+    model = Match
 
 
 class PlayMatch(LoginRequiredMixin, View):
@@ -107,3 +119,139 @@ class PlayMatch(LoginRequiredMixin, View):
             return redirect('index')
         else:
             return render(request, 'pool_ladder/play_match.html', {'match': match, 'form': form})
+
+
+def generic_data_tables_view(request, object, query_set, paginate=True):
+    # get the basic parameters
+    draw = int(request.GET.get('draw', 0))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 0))
+
+    # handle a search term
+    search = request.GET.get('search[value]', '')
+    results_total = query_set.count()
+
+    if search:
+        # start with a blank Q object and add a query for every non-relational field attached to the model
+        q_objects = Q()
+
+        for field in object._meta.fields:
+            if field.is_relation:
+                continue
+            kwargs = {'{}__icontains'.format(field.name): search}
+            q_objects |= Q(**kwargs)
+
+        query_set = query_set.filter(q_objects)
+
+    # handle the ordering
+    order_column_index = request.GET.get('order[0][column]')
+    order_by = request.GET.get('columns[{}][name]'.format(order_column_index))
+    order_direction = request.GET.get('order[0][dir]')
+
+    if order_direction == 'desc':
+        order_by = '-{}'.format(order_by)
+
+    if order_by:
+        query_set = query_set.order_by(order_by)
+
+    # now we have our completed queryset. we can paginate it if requested
+    if paginate:
+        index = start + 1  # start is 0 based, pages are 1 based
+        page = Paginator(
+            query_set,
+            length
+        ).get_page(
+            ceil(index / length)
+        )
+
+    return {
+        'draw': draw,
+        'recordsTotal': results_total,
+        'recordsFiltered': query_set.count(),
+        'data': page if paginate else query_set
+    }
+
+
+class LadderDataTablesView(LoginRequiredMixin, View):
+    def get(self, request):
+        data = generic_data_tables_view(request, UserProfile, UserProfile.objects.all(), paginate=False)
+        return JsonResponse(
+            {
+                'draw': data['draw'],
+                'recordsTotal': data['recordsTotal'],
+                'recordsFiltered': data['recordsFiltered'],
+                'data': [
+                    [
+                        get_template('pool_ladder/fragments/user_rank.html').render({'profile': profile}),
+                        Template('{{ profile.user }}').render(Context({'profile': profile})),
+                        get_template(
+                            'pool_ladder/fragments/user_available.html'
+                        ).render(
+                            {
+                                'profile': profile,
+                                'can_challenge': profile.can_challenge(request.user)
+                            }
+                        )
+                    ] for profile in data['data']
+                ]
+            }
+        )
+
+
+class ChallengesDataTablesView(LoginRequiredMixin, View):
+    def get(self, request):
+        data = generic_data_tables_view(request, Match, Match.objects.filter(played__isnull=True), paginate=False)
+        return JsonResponse(
+            {
+                'draw': data['draw'],
+                'recordsTotal': data['recordsTotal'],
+                'recordsFiltered': data['recordsFiltered'],
+                'data': [
+                    [
+                        Template('{{ challenge.challenge_time }}').render(Context({'challenge': challenge})),
+                        Template(
+                            '<small>{{ challenge.time_until | timeuntil }}</small>'
+                        ).render(
+                            Context({'challenge': challenge})
+                        ),
+                        get_template(
+                            'pool_ladder/fragments/challenge_challenger.html'
+                        ).render(
+                            {'challenge': challenge}
+                        ),
+                        get_template(
+                            'pool_ladder/fragments/challenge_opponent.html'
+                        ).render(
+                            {'challenge': challenge}
+                        ),
+                        get_template(
+                            'pool_ladder/fragments/challenge_action.html'
+                        ).render(
+                            {
+                                'challenge': challenge,
+                                'logged_in_user': request.user.username
+                            }
+                        )
+                    ] for challenge in data['data']
+                ]
+            }
+        )
+
+
+class PlayedMatchesDataTablesView(LoginRequiredMixin, View):
+    def get(self, request):
+        data = generic_data_tables_view(request, Match, Match.objects.exclude(played__isnull=True))
+        return JsonResponse(
+            {
+                'draw': data['draw'],
+                'recordsTotal': data['recordsTotal'],
+                'recordsFiltered': data['recordsFiltered'],
+                'data': [
+                    [
+                        get_template('pool_ladder/fragments/match_link.html').render({'match': match}),
+                        get_template('pool_ladder/fragments/match_winner.html').render({'match': match}),
+                        get_template('pool_ladder/fragments/match_loser.html').render({'match': match})
+                    ] for match in data['data']
+                ]
+            }
+        )

@@ -2,6 +2,7 @@ import json
 
 import requests
 from asgiref.sync import async_to_sync
+from channels.consumer import SyncConsumer
 from channels.generic.websocket import JsonWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.conf import settings
@@ -26,9 +27,9 @@ class MainConsumer(JsonWebsocketConsumer):
         # add the channel to the necessary groups
         async_to_sync(self.channel_layer.group_add)('pool_ladder', self.channel_name)
 
-        self.send_users({})
-        self.send_challenges({'ignore_users': True})
-        self.send_matches({'ignore_users': True})
+        # self.send_users({})
+        # self.send_challenges({'ignore_users': True})
+        # self.send_matches({'ignore_users': True})
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
@@ -46,31 +47,10 @@ class MainConsumer(JsonWebsocketConsumer):
 
     def send_users(self, event):
         """
-        send the user ladder
+        update the user ladder
         """
         # clear the table
-        self.send(json.dumps({'message_type': 'clear_users'}))
-
-        max = UserProfile.objects.aggregate(max_rank=Max('rank'))
-
-        for profile in UserProfile.objects.all():
-            self.send_json(
-                {
-                    'message_type': 'user_ladder',
-                    'user': render_to_string(
-                        'pool_ladder/fragments/user.html',
-                        {
-                            'profile': profile,
-                            'can_challenge': profile.can_challenge(self.scope["user"]),
-                            'swag': (
-                                '1f478' if profile.rank == 1
-                                else '1F4A9;' if profile.rank == max['max_rank']
-                                else ''
-                            )
-                        }
-                    )
-                }
-            )
+        self.send(json.dumps({'message_type': 'users'}))
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
@@ -81,25 +61,10 @@ class MainConsumer(JsonWebsocketConsumer):
 
     def send_challenges(self, event):
         """
-        send the matches to be played
+        update the matches to be played
         """
         # clear the table
-        self.send(json.dumps({'message_type': 'clear_challenges'}))
-
-        for challenge in Match.objects.filter(played__isnull=True):
-            self.send_json(
-                {
-                    'message_type': 'challenge',
-                    'challenge': render_to_string(
-                        'pool_ladder/fragments/challenge.html',
-                        {
-                            'challenge': challenge,
-                            'logged_in_user': self.scope["user"].username
-                        }
-                    ),
-
-                }
-            )
+        self.send(json.dumps({'message_type': 'challenges'}))
 
         if not event.get('ignore_users'):
             async_to_sync(get_channel_layer().group_send)(
@@ -118,23 +83,10 @@ class MainConsumer(JsonWebsocketConsumer):
 
     def send_matches(self, event):
         """
-        send the matches to be played
+        update the played matches
         """
         # clear the table
-        self.send(json.dumps({'message_type': 'clear_matches'}))
-
-        matches = Match.objects.exclude(played__isnull=True).order_by('-played')
-
-        for match in Paginator(matches, 10).get_page(1):
-            self.send_json(
-                {
-                    'message_type': 'match',
-                    'match': render_to_string(
-                        'pool_ladder/fragments/match.html',
-                        {'match': match}
-                    )
-                }
-            )
+        self.send(json.dumps({'message_type': 'matches'}))
 
         if not event.get('ignore_users'):
             async_to_sync(get_channel_layer().group_send)(
@@ -197,7 +149,7 @@ class MainConsumer(JsonWebsocketConsumer):
         """
         for challenge in Match.objects.filter(played__isnull=True):
             if challenge.time_until < now():
-                # challenge has times out so the challenger automatically wins
+                # challenge has timed out so the challenger automatically wins
                 challenge.start_match()
 
                 game_0 = challenge.game_set.get(index=0)
@@ -211,8 +163,10 @@ class MainConsumer(JsonWebsocketConsumer):
                 challenge.set_winner_and_loser()
                 challenge.save()
 
+
+class NotificationConsumer(SyncConsumer):
     @staticmethod
-    def email_notification(event):
+    def email(event):
         """
         send a challenge by email
         """
@@ -233,7 +187,7 @@ class MainConsumer(JsonWebsocketConsumer):
             print('notified {} by email'.format(event.get('email')))
 
     @staticmethod
-    def slack_notification(event):
+    def slack(event):
         """
         Send challenge notification by slack
         """

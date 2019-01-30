@@ -1,0 +1,3 @@
+{% if logged_in_user == challenge.challenger.username or logged_in_user == challenge.opponent.username %}
+    <a href="{% url 'play_match' pk=challenge.pk %}">Enter Results</a>
+{% endif %}

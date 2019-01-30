@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% load bootstrap %}
+{% load widget_tweaks %}
+
+{% block title %}Match Details - {{ object.challenger }} vs {{ object.opponent }}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col text-center">
+            <h2>{{ object.challenger }} vs. {{ object.opponent }}</h2>
+            <h3>{{ object.played | date }} at {{ object.played | time }}</h3>
+            <h3>{{ object.winner }} was victorious and moved up to rank {{ object.winner_rank }}</h3>
+            <h5>{{ object.loser }} dropped to rank {{ object.loser_rank }}</h5>
+        </div>
+    </div>
+    <div class="row" style="padding-top: 10px;">
+        {% for game in object.game_set.all %}
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Game {{ game.index }}</h5>
+                        <div class="card-text">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label>Winner</label>
+                                        <input type="text" readonly value="{{ game.winner }}" class="form-control"/>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if game.balled %}
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label>Player Balled!</label>
+                                            <input type="text" readonly value="{{ game.balled }}" class="form-control"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
