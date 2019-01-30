@@ -54,6 +54,10 @@ thead {
     font-size: 200%;
 }
 
+#stats td {
+    text-align: center;
+}
+
 /**
    Movement
 **/
