@@ -151,7 +151,7 @@ class UserProfile(models.Model):
             inverse_y_axis=True,
             show_legend=False,
             truncate_label=-1,
-            x_value_formatter=lambda dt: dt.strftime('%Y-%m-%d %H:%M:%S'),
+            x_value_formatter=lambda dt: dt.strftime('%b. %d, %Y, %I:%M %p'),
             style=CleanStyle(
                 font_family='googlefont:Raleway',
             ),
