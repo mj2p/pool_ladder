@@ -30,6 +30,11 @@ urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
     path('play/<int:pk>', views.PlayMatch.as_view(), name='play_match'),
 
+    path('player/<int:pk>', views.PlayerView.as_view(), name='player_detail'),
+    path('player/<int:pk>/results', views.PlayerResultsDataTablesView.as_view(), name='player_results_datatable'),
+
+    path('user/<int:pk>/update', views.UserNameUpdateView.as_view(), name='update_username'),
+
     path('match/<int:pk>', views.MatchView.as_view(), name='match_detail'),
 
     path('ladder/datatable', views.LadderDataTablesView.as_view(), name='ladder_datatable'),

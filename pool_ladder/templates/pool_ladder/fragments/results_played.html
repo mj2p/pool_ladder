@@ -1,0 +1,9 @@
+<a href="{% url 'match_detail' pk=match.pk %}">
+    {% if user == match.challenger %}
+        {{ match.opponent }}
+    {% else %}
+        {{ match.challenger }}
+    {% endif %}
+</a>
+<br />
+<small>{{ match.played }}</small>

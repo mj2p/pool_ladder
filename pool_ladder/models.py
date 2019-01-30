@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import pygal
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.conf import settings
@@ -8,6 +9,7 @@ from django.db import models
 from django.db.models import Q, Max
 from django.utils.timezone import now
 from pandas.tseries.offsets import BDay
+from pygal.style import CleanStyle
 
 
 class UserProfile(models.Model):
@@ -15,6 +17,18 @@ class UserProfile(models.Model):
     rank = models.IntegerField(default=0)
     slack_id = models.CharField(max_length=255, blank=True, null=True)
     movement = models.IntegerField(default=0)
+
+    @property
+    def matches(self):
+        """
+        return the query set of matches that the user has played
+        :return:
+        """
+        return Match.objects.filter(
+            played__isnull=False
+        ).filter(
+            Q(opponent=self.user) | Q(challenger=self.user)
+        )
 
     @property
     def is_available(self):
@@ -29,7 +43,7 @@ class UserProfile(models.Model):
     @property
     def has_open_challenge(self):
         """
-        return Terue oif this user is in a match not yet played
+        return True if this user is in a match not yet played
         """
         return Match.objects.filter(
             played__isnull=True
@@ -42,13 +56,7 @@ class UserProfile(models.Model):
         """
         return the last match this user was involved in
         """
-        return Match.objects.filter(
-            played__isnull=False
-        ).filter(
-            Q(opponent=self.user) | Q(challenger=self.user)
-        ).order_by(
-            'played'
-        ).last()
+        return self.matches.order_by('played').last()
 
     @property
     def in_cool_down(self):
@@ -115,6 +123,70 @@ class UserProfile(models.Model):
         self.movement = rank - self.rank
         self.rank = rank
         self.save()
+
+    def get_rank_chart(self):
+        """
+        Use Pygal to generate a chart of the rank movements
+        :return:
+        """
+        ranks = [(now(), self.rank)]
+
+        for match in self.matches.order_by('-played'):
+            if self.user == match.winner:
+                ranks.insert(0, (match.played, match.winner_rank))
+            else:
+                ranks.insert(0, (match.played, match.loser_rank))
+
+            if self.user == match.challenger:
+                ranks.insert(0, (match.played, match.challenger_rank))
+            else:
+                ranks.insert(0, (match.played, match.opponent_rank))
+
+        chart = pygal.DateTimeLine(
+            title='Rank Movements',
+            x_label_rotation=35,
+            x_title='Date Played',
+            y_title='Rank',
+            range=(1, UserProfile.objects.aggregate(max_rank=Max('rank'))['max_rank']),
+            inverse_y_axis=True,
+            show_legend=False,
+            truncate_label=-1,
+            x_value_formatter=lambda dt: dt.strftime('%Y-%m-%d %H:%M:%S'),
+            style=CleanStyle(
+                font_family='googlefont:Raleway',
+            ),
+        )
+        chart.add('', ranks)
+        return chart.render_data_uri()
+
+    @property
+    def matches_won(self):
+        """
+        Return the number of matches won by this user
+        """
+        return Match.objects.filter(
+            played__isnull=False
+        ).filter(
+            winner=self.user
+        ).count()
+
+    @property
+    def matches_lost(self):
+        """
+        Return the number of matches lost by this user
+        """
+        return Match.objects.filter(
+            played__isnull=False
+        ).filter(
+            loser=self.user
+        ).count()
+
+    @property
+    def games_won(self):
+        """
+        return the number of games won by this user
+        """
+        return Game.objects.filter(winner=self.user).count()
 
     def __str__(self):
         return '{} #{}'.format(self.user, self.rank)

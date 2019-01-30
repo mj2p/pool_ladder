@@ -25,6 +25,21 @@ class MatchView(DetailView):
     model = Match
 
 
+class PlayerView(DetailView):
+    model = UserProfile
+
+
+class UserNameUpdateView(View):
+    @staticmethod
+    def post(request, pk):
+        profile = get_object_or_404(UserProfile, pk=pk)
+        profile.user.username = request.POST.get('username', profile.user.username)
+        profile.user.save()
+        profile.save()
+
+        return redirect('player_detail', pk=pk)
+
+
 class PlayMatch(LoginRequiredMixin, View):
     def get(self, request, pk):
         match = get_object_or_404(Match, pk=pk)
@@ -183,7 +198,7 @@ class LadderDataTablesView(LoginRequiredMixin, View):
                 'data': [
                     [
                         get_template('pool_ladder/fragments/user_rank.html').render({'profile': profile}),
-                        Template('{{ profile.user }}').render(Context({'profile': profile})),
+                        get_template('pool_ladder/fragments/user_name.html').render({'profile': profile}),
                         get_template(
                             'pool_ladder/fragments/user_available.html'
                         ).render(
@@ -251,6 +266,47 @@ class PlayedMatchesDataTablesView(LoginRequiredMixin, View):
                         get_template('pool_ladder/fragments/match_link.html').render({'match': match}),
                         get_template('pool_ladder/fragments/match_winner.html').render({'match': match}),
                         get_template('pool_ladder/fragments/match_loser.html').render({'match': match})
+                    ] for match in data['data']
+                ]
+            }
+        )
+
+
+class PlayerResultsDataTablesView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        profile = get_object_or_404(UserProfile, pk=pk)
+        data = generic_data_tables_view(request, Match, profile.matches)
+        return JsonResponse(
+            {
+                'draw': data['draw'],
+                'recordsTotal': data['recordsTotal'],
+                'recordsFiltered': data['recordsFiltered'],
+                'data': [
+                    [
+                        get_template(
+                            'pool_ladder/fragments/results_played.html'
+                        ).render(
+                            {
+                                'match': match,
+                                'user': profile.user
+                            }
+                        ),
+                        get_template(
+                            'pool_ladder/fragments/results_result.html'
+                        ).render(
+                            {
+                                'match': match,
+                                'user': profile.user
+                            }
+                        ),
+                        get_template(
+                            'pool_ladder/fragments/results_rank.html'
+                        ).render(
+                            {
+                                'match': match,
+                                'user': profile.user
+                            }
+                        )
                     ] for match in data['data']
                 ]
             }

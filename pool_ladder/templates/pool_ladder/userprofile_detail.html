@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% load bootstrap %}
+{% load widget_tweaks %}
+
+{% block title %}{{ object }}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col text-center">
+            {% if user == object.user %}
+                <form method="post" action="{% url 'update_username' pk=object.pk %}">
+                    {% csrf_token %}
+                    <input type="text" name="username" value="{{ object.user.username }}" id="update-username" />
+                    <button type="submit" class="btn btn-dark">Save</button>
+                </form>
+            {% else %}
+                <h1>{{ object.user.username }}</h1>
+            {% endif %}
+            <h2>Rank {{ object.rank }}</h2>
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <table id="stats" class="table table-striped table-hover table-bordered bg-light">
+                <caption>Statistics</caption>
+                <thead class="bg-dark">
+                    <tr>
+                        <td scope="col">Played</td>
+                        <td scope="col">Won</td>
+                        <td scope="col">Lost</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td scope="col">{{ object.matches.count }}</td>
+                        <td scope="col">{{ object.matches_won }}</td>
+                        <td scope="col">{{ object.matches_lost }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <embed type="image/svg+xml" src="{{ object.get_rank_chart }}" />
+        </div>
+        <div class="col-4">
+            <table id="results" class="table table-striped table-hover table-bordered bg-light">
+                <caption>Results</caption>
+                <thead class="bg-dark">
+                    <tr>
+                        <td scope="col">Played</td>
+                        <td scope="col">Result</td>
+                        <td scope="col">Rank</td>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block endbodyjs %}
+    <script>
+        $(document).ready(function() {
+            $('#results').DataTable(
+                {
+                    "paging": "full",
+                    "searching": false,
+                    "info": false,
+                    "serverSide": true,
+                    "ajax": "{% url 'player_results_datatable' pk=object.pk %}",
+                    "columns": [
+                        { "name": "played", width: "50%" },
+                        { "name": "result", width: "30%", "orderable": false },
+                        { "name": "rank", width: "20%" },
+                    ],
+                    "order": [[ 0, 'asc' ]]
+                }
+            );
+        } );
+    </script>
+{% endblock %}

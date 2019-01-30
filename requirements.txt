@@ -11,5 +11,6 @@ channels
 channels_redis
 pandas
 psycopg2-binary
+pygal
 requests[security]
 service_identity
