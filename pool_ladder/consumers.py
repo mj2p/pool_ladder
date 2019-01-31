@@ -122,11 +122,11 @@ class MainConsumer(JsonWebsocketConsumer):
                 print('no user found for pk {}'.format(json_data.get('opponent')))
                 return
 
-            if not challenger.userprofile.is_available:
+            if not challenger.userprofile.is_available():
                 print('challenger not available')
                 return
 
-            if not opponent.userprofile.is_available:
+            if not opponent.userprofile.is_available(check_cool_down=False):
                 print('opponent not available')
                 return
 
