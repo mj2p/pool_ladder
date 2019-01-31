@@ -100,6 +100,7 @@ class MainConsumer(JsonWebsocketConsumer):
         )
 
     def receive(self, text_data):
+        print('received data')
         try:
             json_data = json.loads(text_data)
         except ValueError:
