@@ -1,7 +1,7 @@
-{% if profile.has_open_challenge %}
+{% if can_challenge %}
+    <a href="javascript:challenge({{ profile.user.pk }})">Challenge</a>
+{% elif profile.has_open_challenge %}
     <small>Waiting to play</small>
 {% elif profile.in_cool_down %}
     <small>Available in {{ profile.time_available|timeuntil }}</small>
-{% elif can_challenge %}
-    <a href="javascript:challenge({{ profile.user.pk }})">Challenge</a>
 {% endif %}

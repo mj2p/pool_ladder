@@ -30,16 +30,13 @@ class UserProfile(models.Model):
             Q(opponent=self.user) | Q(challenger=self.user)
         )
 
-    def is_available(self, check_cool_down=True):
+    @property
+    def is_available(self):
         """
         determine if this user has any open challenges or has played a match in the last 4 hours
         """
-        if check_cool_down:
-            if not self.has_open_challenge and not self.in_cool_down:
-                return True
-        else:
-            if not self.has_open_challenge:
-                return True
+        if not self.has_open_challenge and not self.in_cool_down:
+            return True
 
         return False
 
@@ -97,7 +94,7 @@ class UserProfile(models.Model):
             return (
                     challenger.userprofile.rank > self.rank >= (challenger.userprofile.rank - 2)
                     and not self.has_open_challenge
-                    and challenger.userprofile.is_available()
+                    and challenger.userprofile.is_available
             )
         except UserProfile.DoesNotExist:
             return False

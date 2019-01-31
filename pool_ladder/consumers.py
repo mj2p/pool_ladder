@@ -100,7 +100,6 @@ class MainConsumer(JsonWebsocketConsumer):
         )
 
     def receive(self, text_data):
-        print('received data')
         try:
             json_data = json.loads(text_data)
         except ValueError:
@@ -119,23 +118,20 @@ class MainConsumer(JsonWebsocketConsumer):
             try:
                 opponent = User.objects.get(pk=json_data.get('opponent'))
             except User.DoesNotExist:
-                print('no user found for pk {}'.format(json_data.get('opponent')))
+                print('no opponent found for pk {}'.format(json_data.get('opponent')))
                 return
 
-            if not challenger.userprofile.is_available():
-                print('challenger not available')
-                return
+            print('{} would like to challenge {}'.format(challenger, opponent))
 
-            if not opponent.userprofile.is_available(check_cool_down=False):
-                print('opponent not available')
-                return
-
-            Match.objects.create(
-                challenger=challenger,
-                opponent=opponent,
-                challenger_rank=challenger.userprofile.rank,
-                opponent_rank=opponent.userprofile.rank
-            )
+            if challenger.userprofile.can_challenge(opponent):
+                Match.objects.create(
+                    challenger=challenger,
+                    opponent=opponent,
+                    challenger_rank=challenger.userprofile.rank,
+                    opponent_rank=opponent.userprofile.rank
+                )
+            else:
+                print('{} cannot challenge {}'.format(challenger, opponent))
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
