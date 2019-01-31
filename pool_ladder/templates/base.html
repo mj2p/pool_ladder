@@ -24,6 +24,7 @@
                     </div>
                     <div class="col text-right align-text-bottom">
                         {% if user.is_authenticated %}
+                        Hi {{ user }}
                         <a href="{% url 'logout' %}" id="logout">
                             logout
                         </a>

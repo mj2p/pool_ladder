@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'channels',
     'bootstrapform',
     'widget_tweaks',
+    'impersonate'
 ]
 
 MIDDLEWARE = [
@@ -56,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'impersonate.middleware.ImpersonateMiddleware'
 ]
 
 ROOT_URLCONF = 'pool_ladder.urls'
