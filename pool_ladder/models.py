@@ -31,12 +31,16 @@ class UserProfile(models.Model):
         )
 
     @property
-    def is_available(self):
+    def is_available(self, check_cool_down=True):
         """
         determine if this user has any open challenges or has played a match in the last 4 hours
         """
-        if not self.has_open_challenge and not self.in_cool_down:
-            return True
+        if check_cool_down:
+            if not self.has_open_challenge and not self.in_cool_down:
+                return True
+        else:
+            if not self.has_open_challenge:
+                return True
 
         return False
 

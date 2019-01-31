@@ -104,11 +104,13 @@ class MainConsumer(JsonWebsocketConsumer):
         try:
             json_data = json.loads(text_data)
         except ValueError:
+            print('malformed data: {}'.format(text_data))
             return
 
         message_type = json_data.get('message_type')
 
         if message_type is None:
+            print('no message type')
             return
 
         if message_type == 'challenge':
@@ -117,12 +119,15 @@ class MainConsumer(JsonWebsocketConsumer):
             try:
                 opponent = User.objects.get(pk=json_data.get('opponent'))
             except User.DoesNotExist:
+                print('no user found for pk {}'.format(json_data.get('opponent')))
                 return
 
             if not challenger.userprofile.is_available:
+                print('challenger not available')
                 return
 
             if not opponent.userprofile.is_available:
+                print('opponent not available')
                 return
 
             Match.objects.create(
