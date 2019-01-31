@@ -27,9 +27,7 @@ class MainConsumer(JsonWebsocketConsumer):
         # add the channel to the necessary groups
         async_to_sync(self.channel_layer.group_add)('pool_ladder', self.channel_name)
 
-        # self.send_users({})
-        # self.send_challenges({'ignore_users': True})
-        # self.send_matches({'ignore_users': True})
+        print('Connected {} to pool_ladder group'.format(self.channel_name))
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
