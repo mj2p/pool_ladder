@@ -93,8 +93,8 @@ class UserProfile(models.Model):
         try:
             return (
                     challenger.userprofile.rank > self.rank >= (challenger.userprofile.rank - 2)
-                    and self.is_available
-                    and not challenger.userprofile.has_open_challenge
+                    and not self.has_open_challenge
+                    and challenger.userprofile.is_available
             )
         except UserProfile.DoesNotExist:
             return False
