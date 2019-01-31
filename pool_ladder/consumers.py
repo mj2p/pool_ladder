@@ -27,8 +27,6 @@ class MainConsumer(JsonWebsocketConsumer):
         # add the channel to the necessary groups
         async_to_sync(self.channel_layer.group_add)('pool_ladder', self.channel_name)
 
-        print('Connected {} to pool_ladder group'.format(self.channel_name))
-
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
             {
