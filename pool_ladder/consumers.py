@@ -123,7 +123,7 @@ class MainConsumer(JsonWebsocketConsumer):
 
             print('{} would like to challenge {}'.format(challenger, opponent))
 
-            if challenger.userprofile.can_challenge(opponent):
+            if opponent.userprofile.can_challenge(challenger):
                 Match.objects.create(
                     challenger=challenger,
                     opponent=opponent,
