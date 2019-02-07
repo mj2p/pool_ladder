@@ -154,7 +154,7 @@ class MainConsumer(JsonWebsocketConsumer):
                 game_0.winner = challenge.challenger
                 game_0.save()
 
-                game_1 = challenge.game_set.get(index=0)
+                game_1 = challenge.game_set.get(index=1)
                 game_1.winner = challenge.challenger
                 game_1.save()
 
