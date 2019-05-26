@@ -45,6 +45,8 @@ jobs:
           destination: test-reports
 
   deploy:
+    docker:
+      - image: buildpack-deps:trusty
     steps:
       - checkout
       - heroku/install # Runs the heroku install command, if necessary.
