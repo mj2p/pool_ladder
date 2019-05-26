@@ -3,8 +3,6 @@
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
 version: 2
-orbs:
-  heroku: circleci/heroku@1.0.0
 jobs:
   build:
     docker:
@@ -45,6 +43,10 @@ jobs:
       - store_artifacts:
           path: test-reports
           destination: test-reports
+
+orbs:
+  heroku: circleci/heroku@1.0.0
+
 workflows:
   heroku_deploy:
     jobs:
