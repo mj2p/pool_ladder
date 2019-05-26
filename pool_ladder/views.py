@@ -18,7 +18,7 @@ from pool_ladder.models import Match, UserProfile
 
 class IndexView(LoginRequiredMixin, View):
     def get(self, request):
-        return render(request, 'pool_ladder/index.html', {'ladder_name': settings.LADDER_NAME})
+        return render(request, 'pool_ladder/index.html')
 
 
 class MatchView(DetailView):
@@ -44,7 +44,7 @@ class PlayMatch(LoginRequiredMixin, View):
     def get(self, request, pk):
         match = get_object_or_404(Match, pk=pk)
         form = MatchForm(match_pk=match.pk)
-        return render(request, 'pool_ladder/play_match.html', {'match': match, 'form': form, 'games': [0, 1 , 2]})
+        return render(request, 'pool_ladder/play_match.html', {'match': match, 'form': form, 'games': [0, 1, 2]})
 
     def post(self, request, pk):
         match = get_object_or_404(Match, pk=pk)
@@ -189,7 +189,7 @@ def generic_data_tables_view(request, object, query_set, paginate=True):
 
 class LadderDataTablesView(LoginRequiredMixin, View):
     def get(self, request):
-        data = generic_data_tables_view(request, UserProfile, UserProfile.objects.all(), paginate=False)
+        data = generic_data_tables_view(request, UserProfile, UserProfile.objects.filter(active=True), paginate=False)
         return JsonResponse(
             {
                 'draw': data['draw'],

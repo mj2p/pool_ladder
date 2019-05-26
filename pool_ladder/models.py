@@ -3,7 +3,6 @@ from datetime import timedelta
 import pygal
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q, Max
@@ -17,6 +16,7 @@ class UserProfile(models.Model):
     rank = models.IntegerField(default=0)
     slack_id = models.CharField(max_length=255, blank=True, null=True)
     movement = models.IntegerField(default=0)
+    active = models.BooleanField(default=True)
 
     @property
     def matches(self):
@@ -238,9 +238,12 @@ class Match(models.Model):
     winner_rank = models.IntegerField(null=True, blank=True)
     loser_rank = models.IntegerField(null=True, blank=True)
     played = models.DateTimeField(null=True, blank=True)
+    declined = models.BooleanField(default=False)
+    pending = models.BooleanField(default=True)
+    days_to_play = models.IntegerField(default=3)
 
     class Meta:
-        ordering = ['challenge_time']
+        ordering = ['-challenge_time']
         verbose_name_plural = "matches"
 
     def __str__(self):
@@ -272,9 +275,7 @@ class Match(models.Model):
                 'notifications',
                 {
                     'type': 'email',
-                    'email': self.opponent.email,
-                    'challenger': self.challenger.username,
-                    'time_until': self.time_until.strftime('%Y-%m-%d %H:%M:%S')
+                    'match_pk': self.pk,
                 }
             )
 
@@ -282,21 +283,7 @@ class Match(models.Model):
             'notifications',
             {
                 'type': 'slack',
-                'message': '{} You have been challenged to a {} match by {}.\n'
-                           'You need to play the match by {} or you will forfeit'.format(
-                                (
-                                    '<@{}>'.format(self.opponent.userprofile.slack_id)
-                                    if self.opponent.userprofile.slack_id
-                                    else self.opponent.username
-                                ),
-                                settings.LADDER_NAME,
-                                (
-                                    '<@{}>'.format(self.challenger.userprofile.slack_id)
-                                    if self.challenger.userprofile.slack_id
-                                    else self.challenger.username
-                                ),
-                                self.time_until.strftime('%Y-%m-%d %H:%M:%S')
-                            )
+                'match_pk': self.pk,
             }
         )
 
@@ -310,7 +297,7 @@ class Match(models.Model):
 
     @property
     def time_until(self):
-        return self.challenge_time + BDay(3)
+        return self.challenge_time + BDay(self.days_to_play)
 
     def start_match(self, **kwargs):
         self.played = now()

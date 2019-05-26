@@ -11,6 +11,7 @@
     {% endblock %}
 
 </head>
+{% load pool_ladder %}
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -18,7 +19,7 @@
                 <nav class="navbar navbar-dark bg-dark navbar-expand-md justify-content-center">
                     <div class="col">
                         <a href="{% url 'index' %}" id="main-title" class="navbar-brand d-flex w-50 mr-auto">
-                            Ripjar Pool Ladder
+                            {{ name|ladder_name }}
                         </a>
                     </div>
                     <div class="col text-right align-text-bottom">

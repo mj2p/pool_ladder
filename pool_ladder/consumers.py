@@ -8,12 +8,10 @@ from channels.layers import get_channel_layer
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from django.core.paginator import Paginator
-from django.db.models import Max
-from django.template.loader import render_to_string
+from django.db import DatabaseError
 from django.utils.timezone import now
 
-from pool_ladder.models import UserProfile, Match
+from pool_ladder.models import Match
 
 
 class MainConsumer(JsonWebsocketConsumer):
@@ -21,15 +19,11 @@ class MainConsumer(JsonWebsocketConsumer):
         """
         Add channel to the necessary groups. Initiate data scan
         """
-        # accept the websocket connection
+        # accept the web socket connection
         self.accept()
 
         # add the channel to the necessary groups
         async_to_sync(self.channel_layer.group_add)('pool_ladder', self.channel_name)
-
-        # self.send_users({})
-        # self.send_challenges({'ignore_users': True})
-        # self.send_matches({'ignore_users': True})
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
@@ -50,7 +44,7 @@ class MainConsumer(JsonWebsocketConsumer):
         update the user ladder
         """
         # clear the table
-        self.send(json.dumps({'message_type': 'users'}))
+        self.send_json({'message_type': 'users'})
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
@@ -64,7 +58,7 @@ class MainConsumer(JsonWebsocketConsumer):
         update the matches to be played
         """
         # clear the table
-        self.send(json.dumps({'message_type': 'challenges'}))
+        self.send_json({'message_type': 'challenges'})
 
         if not event.get('ignore_users'):
             async_to_sync(get_channel_layer().group_send)(
@@ -86,7 +80,7 @@ class MainConsumer(JsonWebsocketConsumer):
         update the played matches
         """
         # clear the table
-        self.send(json.dumps({'message_type': 'matches'}))
+        self.send_json({'message_type': 'matches'})
 
         if not event.get('ignore_users'):
             async_to_sync(get_channel_layer().group_send)(
@@ -103,13 +97,8 @@ class MainConsumer(JsonWebsocketConsumer):
             }
         )
 
-    def receive(self, text_data):
-        try:
-            json_data = json.loads(text_data)
-        except ValueError:
-            return
-
-        message_type = json_data.get('message_type')
+    def receive_json(self, content, **kwargs):
+        message_type = content.get('message_type')
 
         if message_type is None:
             return
@@ -118,7 +107,7 @@ class MainConsumer(JsonWebsocketConsumer):
             challenger = self.scope['user']
 
             try:
-                opponent = User.objects.get(pk=json_data.get('opponent'))
+                opponent = User.objects.get(pk=content.get('opponent'))
             except User.DoesNotExist:
                 return
 
@@ -128,12 +117,16 @@ class MainConsumer(JsonWebsocketConsumer):
             if not opponent.userprofile.is_available:
                 return
 
-            Match.objects.create(
-                challenger=challenger,
-                opponent=opponent,
-                challenger_rank=challenger.userprofile.rank,
-                opponent_rank=opponent.userprofile.rank
-            )
+            try:
+                # this match object is created as pending with declined set to False
+                Match.objects.create(
+                    challenger=challenger,
+                    opponent=opponent,
+                    challenger_rank=challenger.userprofile.rank,
+                    opponent_rank=opponent.userprofile.rank
+                )
+            except DatabaseError as e:
+                self.send_json({'message_type': 'challenge_error', 'error': '{}'.format(e)})
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
@@ -170,21 +163,34 @@ class NotificationConsumer(SyncConsumer):
         """
         send a challenge by email
         """
-        if settings.FROM_EMAIL:
-            send_mail(
-                'Pool Ladder Challenge',
-                '{} has challenged you to a {} match.\n'
-                'It needs to be played by {} or you will forfeit'.format(
-                    event.get('challenger'),
-                    settings.LADDER_NAME,
-                    event.get('time_until')
-                ),
-                '<{}>{}'.format(settings.FROM_EMAIL, settings.LADDER_NAME),
-                [
-                    event.get('email')
-                ]
-            )
-            print('notified {} by email'.format(event.get('email')))
+        if not settings.FROM_EMAIL:
+            return
+
+        # get the match
+        try:
+            match = Match.objects.get(pk=event.get('match'))
+        except Match.DoesNotExist:
+            return
+
+        if match.pending:
+            message = '{} has challenged you to '
+        else:
+            message = 'It\'s on!\n' \
+                      ''
+        send_mail(
+            '{} Challenge'.format(settings.LADDER_NAME),
+            '{} has challenged you to a {} match.\n'
+            'It needs to be played by {} or you will forfeit'.format(
+                event.get('challenger'),
+                settings.LADDER_NAME,
+                event.get('time_until')
+            ),
+            '<{}>{}'.format(settings.FROM_EMAIL, settings.LADDER_NAME),
+            [
+                event.get('email')
+            ]
+        )
+        print('notified {} by email'.format(event.get('email')))
 
     @staticmethod
     def slack(event):

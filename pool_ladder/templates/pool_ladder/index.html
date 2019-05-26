@@ -2,8 +2,9 @@
 
 {% load bootstrap %}
 {% load static %}
+{% load pool_ladder %}
 
-{% block title %}{{ ladder_name }}{% endblock %}
+{% block title %}{{ name|ladder_name }}{% endblock %}
 
 {% block content %}
     <div class="row">
@@ -146,6 +147,10 @@
 
             if (message_type === "matches"){
                 $('#matches').DataTable().draw('page');
+            }
+
+            if (message_type === "challenge_error"){
+                alert('There was an error when creating the challenge\n\n' + action['error']);
             }
         })
 

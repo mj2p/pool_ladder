@@ -84,7 +84,7 @@ ASGI_APPLICATION = "pool_ladder.routing.application"
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config()
+    'default': dj_database_url.config(),
 }
         
 
