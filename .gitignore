@@ -3,3 +3,4 @@ ve/
 *.sqlite3
 .env
 __pycache__/
+*.rdb

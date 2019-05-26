@@ -27,10 +27,6 @@ class MainConsumer(JsonWebsocketConsumer):
         # add the channel to the necessary groups
         async_to_sync(self.channel_layer.group_add)('pool_ladder', self.channel_name)
 
-        # self.send_users({})
-        # self.send_challenges({'ignore_users': True})
-        # self.send_matches({'ignore_users': True})
-
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
             {
@@ -107,11 +103,13 @@ class MainConsumer(JsonWebsocketConsumer):
         try:
             json_data = json.loads(text_data)
         except ValueError:
+            print('malformed data: {}'.format(text_data))
             return
 
         message_type = json_data.get('message_type')
 
         if message_type is None:
+            print('no message type')
             return
 
         if message_type == 'challenge':
@@ -120,20 +118,20 @@ class MainConsumer(JsonWebsocketConsumer):
             try:
                 opponent = User.objects.get(pk=json_data.get('opponent'))
             except User.DoesNotExist:
+                print('no opponent found for pk {}'.format(json_data.get('opponent')))
                 return
 
-            if not challenger.userprofile.is_available:
-                return
+            print('{} would like to challenge {}'.format(challenger, opponent))
 
-            if not opponent.userprofile.is_available:
-                return
-
-            Match.objects.create(
-                challenger=challenger,
-                opponent=opponent,
-                challenger_rank=challenger.userprofile.rank,
-                opponent_rank=opponent.userprofile.rank
-            )
+            if opponent.userprofile.can_challenge(challenger):
+                Match.objects.create(
+                    challenger=challenger,
+                    opponent=opponent,
+                    challenger_rank=challenger.userprofile.rank,
+                    opponent_rank=opponent.userprofile.rank
+                )
+            else:
+                print('{} cannot challenge {}'.format(challenger, opponent))
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
@@ -156,7 +154,7 @@ class MainConsumer(JsonWebsocketConsumer):
                 game_0.winner = challenge.challenger
                 game_0.save()
 
-                game_1 = challenge.game_set.get(index=0)
+                game_1 = challenge.game_set.get(index=1)
                 game_1.winner = challenge.challenger
                 game_1.save()
 
