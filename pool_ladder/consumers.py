@@ -6,10 +6,12 @@ from channels.consumer import SyncConsumer
 from channels.generic.websocket import JsonWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db.models import Max
+from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 
@@ -124,12 +126,26 @@ class MainConsumer(JsonWebsocketConsumer):
             print('{} would like to challenge {}'.format(challenger, opponent))
 
             if opponent.userprofile.can_challenge(challenger):
-                Match.objects.create(
-                    challenger=challenger,
-                    opponent=opponent,
-                    challenger_rank=challenger.userprofile.rank,
-                    opponent_rank=opponent.userprofile.rank
-                )
+                try:
+                    Match.objects.create(
+                        challenger=challenger,
+                        opponent=opponent,
+                        challenger_rank=challenger.userprofile.rank,
+                        opponent_rank=opponent.userprofile.rank
+                    )
+                except Exception as e:
+                    self.send_json(
+                        {
+                            'message_type': 'messages',
+                            'text': render_to_string(
+                                'pool_ladder/fragments/message.html',
+                                {
+                                    'message': 'There was a problem creating the challenge: {}'.format(e),
+                                    'tag': 'danger'
+                                }
+                            )
+                        }
+                    )
             else:
                 print('{} cannot challenge {}'.format(challenger, opponent))
 

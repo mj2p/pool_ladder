@@ -147,6 +147,10 @@
             if (message_type === "matches"){
                 $('#matches').DataTable().draw('page');
             }
+
+            if (message_type === "messages"){
+                $('#messages').html(action['text']);
+            }
         })
 
 

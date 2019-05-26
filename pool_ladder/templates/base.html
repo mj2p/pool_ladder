@@ -37,6 +37,13 @@
         </div>
         <div class="row content">
             <div class="col-sm-10 offset-sm-1">
+                <div id="messages">
+                    {% if messages %}
+                        {% for message in messages %}
+                            {% include 'pool_ladder/fragments/message.html' %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
                 {% block content %}
                 {% endblock %}
             </div>

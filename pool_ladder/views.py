@@ -1,6 +1,7 @@
 from math import ceil
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -50,6 +51,10 @@ class PlayMatch(LoginRequiredMixin, View):
         match = get_object_or_404(Match, pk=pk)
 
         form = MatchForm(request.POST, match_pk=match.pk)
+
+        if match.played:
+            messages.add_message(request, messages.ERROR, 'Results have already been entered for this match.')
+            return render(request, 'pool_ladder/play_match.html', {'match': match, 'form': form})
 
         if form.is_valid():
             ####

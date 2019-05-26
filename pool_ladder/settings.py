@@ -11,9 +11,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 import json
 import os
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import dj_database_url
+from django.contrib import messages
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -159,3 +158,7 @@ AWS_SES_REGION = 'eu-west-1'
 FROM_EMAIL = env.get('FROM_EMAIL')
 
 SLACK_WEBHOOK_URL = env.get('SLACK_WEBHOOK_URL')
+
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger'
+}
