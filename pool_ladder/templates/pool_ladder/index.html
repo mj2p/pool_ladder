@@ -149,8 +149,8 @@
                 $('#matches').DataTable().draw('page');
             }
 
-            if (message_type === "challenge_error"){
-                alert('There was an error when creating the challenge\n\n' + action['error']);
+            if (message_type === "messages"){
+                $('#messages').html(action['text']);
             }
         })
 

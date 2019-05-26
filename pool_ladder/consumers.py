@@ -6,9 +6,17 @@ from channels.consumer import SyncConsumer
 from channels.generic.websocket import JsonWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
+<<<<<<< HEAD
 from django.db import DatabaseError
+=======
+from django.core.paginator import Paginator
+from django.db.models import Max
+from django.http import HttpRequest
+from django.template.loader import render_to_string
+>>>>>>> master
 from django.utils.timezone import now
 
 from pool_ladder.models import Match
@@ -101,6 +109,7 @@ class MainConsumer(JsonWebsocketConsumer):
         message_type = content.get('message_type')
 
         if message_type is None:
+            print('no message type')
             return
 
         if message_type == 'challenge':
@@ -109,6 +118,7 @@ class MainConsumer(JsonWebsocketConsumer):
             try:
                 opponent = User.objects.get(pk=content.get('opponent'))
             except User.DoesNotExist:
+                print('no opponent found for pk {}'.format(content.get('opponent')))
                 return
 
             if not challenger.userprofile.is_available:
@@ -117,16 +127,29 @@ class MainConsumer(JsonWebsocketConsumer):
             if not opponent.userprofile.is_available:
                 return
 
-            try:
-                # this match object is created as pending with declined set to False
-                Match.objects.create(
-                    challenger=challenger,
-                    opponent=opponent,
-                    challenger_rank=challenger.userprofile.rank,
-                    opponent_rank=opponent.userprofile.rank
-                )
-            except DatabaseError as e:
-                self.send_json({'message_type': 'challenge_error', 'error': '{}'.format(e)})
+            if opponent.userprofile.can_challenge(challenger):
+                try:
+                    Match.objects.create(
+                        challenger=challenger,
+                        opponent=opponent,
+                        challenger_rank=challenger.userprofile.rank,
+                        opponent_rank=opponent.userprofile.rank
+                    )
+                except Exception as e:
+                    self.send_json(
+                        {
+                            'message_type': 'messages',
+                            'text': render_to_string(
+                                'pool_ladder/fragments/message.html',
+                                {
+                                    'message': 'There was a problem creating the challenge: {}'.format(e),
+                                    'tag': 'danger'
+                                }
+                            )
+                        }
+                    )
+            else:
+                print('{} cannot challenge {}'.format(challenger, opponent))
 
         async_to_sync(get_channel_layer().group_send)(
             'pool_ladder',
@@ -149,7 +172,7 @@ class MainConsumer(JsonWebsocketConsumer):
                 game_0.winner = challenge.challenger
                 game_0.save()
 
-                game_1 = challenge.game_set.get(index=0)
+                game_1 = challenge.game_set.get(index=1)
                 game_1.winner = challenge.challenger
                 game_1.save()
 

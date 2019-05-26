@@ -21,6 +21,7 @@ from pool_ladder import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('i/', include('impersonate.urls')),
 
     path('accounts/', include('django_registration.backends.one_step.urls')),
 

@@ -3,6 +3,7 @@ bpython
 django
 django-amazon-ses
 django-bootstrap-form
+django-impersonate
 django-registration
 django-storages
 django-widget-tweaks

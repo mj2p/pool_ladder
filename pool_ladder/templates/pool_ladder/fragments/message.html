@@ -1,0 +1,4 @@
+<div class="alert {% if message.tags %}alert-{{ message.tags }}{% elif tag %}alert-{{ tag }}{% endif %} alert-dismissable">
+    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+    <span>{{ message }}</span>
+</div>
