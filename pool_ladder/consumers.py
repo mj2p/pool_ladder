@@ -6,17 +6,9 @@ from channels.consumer import SyncConsumer
 from channels.generic.websocket import JsonWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.conf import settings
-from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-<<<<<<< HEAD
-from django.db import DatabaseError
-=======
-from django.core.paginator import Paginator
-from django.db.models import Max
-from django.http import HttpRequest
 from django.template.loader import render_to_string
->>>>>>> master
 from django.utils.timezone import now
 
 from pool_ladder.models import Match
