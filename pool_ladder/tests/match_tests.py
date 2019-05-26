@@ -67,6 +67,3 @@ class MatchTestCase(TestCase):
             opponent_rank=self.other_player.userprofile.rank
         )
         self.assertFalse(self.opponent.userprofile.can_challenge(self.challenger))
-
-    def test_fail(self):
-        self.assertTrue(False)
