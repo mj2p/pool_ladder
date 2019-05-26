@@ -48,6 +48,8 @@ orbs:
   heroku: circleci/heroku@1.0.0
 
 workflows:
-  heroku_deploy:
+  version: 2
+  build_heroku_deploy:
     jobs:
+      - build
       - heroku/deploy-via-git
