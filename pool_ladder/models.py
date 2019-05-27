@@ -404,6 +404,20 @@ class Match(models.Model):
                 self.loser_rank = self.challenger.userprofile.rank
 
                 self.save()
+                # we should let everyone know
+                async_to_sync(get_channel_layer().send)(
+                    'notifications',
+                    {
+                        'type': 'slack',
+                        'message': '{} JUST GOT BALLED!'.format(
+                                        (
+                                            '<@{}>'.format(self.challenger.userprofile.slack_id)
+                                            if self.challenger.userprofile.slack_id
+                                            else self.challenger.username
+                                        )
+                                    )
+                    }
+                )
                 return
 
             if game.balled == self.opponent:
@@ -416,6 +430,20 @@ class Match(models.Model):
                 self.loser_rank = self.opponent.userprofile.rank
 
                 self.save()
+                # we should let everyone know
+                async_to_sync(get_channel_layer().send)(
+                    'notifications',
+                    {
+                        'type': 'slack',
+                        'message': '{} JUST GOT BALLED!'.format(
+                            (
+                                '<@{}>'.format(self.opponent.userprofile.slack_id)
+                                if self.opponent.userprofile.slack_id
+                                else self.opponent.username
+                            )
+                        )
+                    }
+                )
                 return
 
             # otherwise get the tally going
