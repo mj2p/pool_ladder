@@ -181,17 +181,6 @@ class NotificationConsumer(SyncConsumer):
         if not settings.FROM_EMAIL:
             return
 
-        # get the match
-        try:
-            match = Match.objects.get(pk=event.get('match'))
-        except Match.DoesNotExist:
-            return
-
-        if match.pending:
-            message = '{} has challenged you to '
-        else:
-            message = 'It\'s on!\n' \
-                      ''
         send_mail(
             '{} Challenge'.format(settings.LADDER_NAME),
             '{} has challenged you to a {} match.\n'

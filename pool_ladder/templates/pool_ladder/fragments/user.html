@@ -1,6 +1,6 @@
 <tr>
     <td scope="col">
-        {{ profile.rank }}{% if swag %} &#x{{ swag }}{% endif %}
+        {{ profile.rank }}{% for char in swag %} &#x{{ char }}{% endfor %}
     </td>
     <td scope="col">{{ profile.user.username }}</td>
     <td scope="col">

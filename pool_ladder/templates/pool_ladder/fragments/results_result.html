@@ -1,5 +1,9 @@
-{% if user == match.winner %}
-    Winner
+{% if match.declined %}
+    Declined
 {% else %}
-    Loser
+    {% if user == match.winner %}
+        Winner
+    {% else %}
+        Loser
+    {% endif %}
 {% endif %}

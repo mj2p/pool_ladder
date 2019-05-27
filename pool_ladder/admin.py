@@ -5,8 +5,9 @@ from pool_ladder.models import UserProfile, Match, Game
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ['user', 'rank', 'slack_id']
+    list_display = ['user', 'rank', 'active', 'slack_id']
     raw_id_fields = ['user']
+    list_editable = ['active', 'rank', 'slack_id']
 
 
 @admin.register(Match)

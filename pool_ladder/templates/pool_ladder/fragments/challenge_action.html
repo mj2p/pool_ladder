@@ -1,3 +1,9 @@
 {% if logged_in_user == challenge.challenger.username or logged_in_user == challenge.opponent.username %}
-    <a href="{% url 'play_match' pk=challenge.pk %}">Enter Results</a>
+    <small><a href="{% url 'play_match' pk=challenge.pk %}">Enter Results</a></small>
+{% endif %}
+{% if logged_in_user == challenge.opponent.username and challenge.opponent.userprofile.can_decline %}
+    <small><a href="{% url 'decline' pk=challenge.pk %}">Decline</a></small>
+{% endif %}
+{% if logged_in_user == challenge.opponent.username and not max_days %}
+    <small><a href="{% url 'add_a_day' pk=challenge.pk %}">Add a Day</a></small>
 {% endif %}

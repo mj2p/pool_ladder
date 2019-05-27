@@ -6,10 +6,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Template, Context
 from django.template.loader import get_template
+from django.utils.timezone import now
 from django.views import View
 from django.views.generic import DetailView
 
@@ -49,12 +50,15 @@ class PlayMatch(LoginRequiredMixin, View):
 
     def post(self, request, pk):
         match = get_object_or_404(Match, pk=pk)
-
         form = MatchForm(request.POST, match_pk=match.pk)
+
+        if not match.can_play(request.user):
+            messages.add_message(request, messages.ERROR, 'You are not authorised to play this match.')
+            return render(request, 'pool_ladder/index.html')
 
         if match.played:
             messages.add_message(request, messages.ERROR, 'Results have already been entered for this match.')
-            return render(request, 'pool_ladder/play_match.html', {'match': match, 'form': form})
+            return render(request, 'pool_ladder/index.html')
 
         if form.is_valid():
             ####
@@ -141,6 +145,44 @@ class PlayMatch(LoginRequiredMixin, View):
             return render(request, 'pool_ladder/play_match.html', {'match': match, 'form': form})
 
 
+class AddDayToMatch(View):
+    @staticmethod
+    def get(request, pk):
+        match = get_object_or_404(Match, pk=pk)
+
+        if request.user != match.opponent:
+            messages.add_message(request, messages.ERROR, 'You are not authorised to add time to this match.')
+            return render(request, 'pool_ladder/index.html')
+
+        if match.days_to_play == settings.MAX_DAYS_TO_PLAY:
+            messages.add_message(request, messages.ERROR, 'The match already has the maximum allowed time added.')
+            return render(request, 'pool_ladder/index.html')
+
+        match.days_to_play += 1
+        match.save()
+        messages.add_message(request, messages.INFO, 'A day has been added to the time.')
+        return render(request, 'pool_ladder/index.html')
+
+
+class DeclineMatch(View):
+    @staticmethod
+    def get(request, pk):
+        match = get_object_or_404(Match, pk=pk)
+
+        if request.user != match.opponent:
+            messages.add_message(request, messages.ERROR, 'You are not authorised to decline this match.')
+            return render(request, 'pool_ladder/index.html')
+
+        if not match.opponent.userprofile.can_decline():
+            messages.add_message(request, messages.ERROR, 'You cannot decline this match.')
+            return render(request, 'pool_ladder/index.html')
+
+        match.declined = True
+        match.save()
+        messages.add_message(request, messages.INFO, 'You have declined the match.')
+        return render(request, 'pool_ladder/index.html')
+
+
 def generic_data_tables_view(request, object, query_set, paginate=True):
     # get the basic parameters
     draw = int(request.GET.get('draw', 0))
@@ -220,7 +262,12 @@ class LadderDataTablesView(LoginRequiredMixin, View):
 
 class ChallengesDataTablesView(LoginRequiredMixin, View):
     def get(self, request):
-        data = generic_data_tables_view(request, Match, Match.objects.filter(played__isnull=True), paginate=False)
+        data = generic_data_tables_view(
+            request,
+            Match,
+            Match.objects.filter(played__isnull=True),
+            paginate=False
+        )
         return JsonResponse(
             {
                 'draw': data['draw'],
@@ -249,7 +296,8 @@ class ChallengesDataTablesView(LoginRequiredMixin, View):
                         ).render(
                             {
                                 'challenge': challenge,
-                                'logged_in_user': request.user.username
+                                'logged_in_user': request.user.username,
+                                'max_days': challenge.days_to_play == settings.MAX_DAYS_TO_PLAY
                             }
                         )
                     ] for challenge in data['data']
@@ -260,7 +308,11 @@ class ChallengesDataTablesView(LoginRequiredMixin, View):
 
 class PlayedMatchesDataTablesView(LoginRequiredMixin, View):
     def get(self, request):
-        data = generic_data_tables_view(request, Match, Match.objects.exclude(played__isnull=True))
+        data = generic_data_tables_view(
+            request,
+            Match,
+            Match.objects.exclude(played__isnull=True).filter(declined=False)
+        )
         return JsonResponse(
             {
                 'draw': data['draw'],

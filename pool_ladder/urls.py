@@ -29,6 +29,8 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
     path('', views.IndexView.as_view(), name='index'),
+    path('add-a-day/<int:pk>', views.AddDayToMatch.as_view(), name='add_a_day'),
+    path('decline/<int:pk>', views.DeclineMatch.as_view(), name='decline'),
     path('play/<int:pk>', views.PlayMatch.as_view(), name='play_match'),
 
     path('player/<int:pk>', views.PlayerView.as_view(), name='player_detail'),

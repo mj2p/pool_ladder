@@ -159,6 +159,9 @@ FROM_EMAIL = env.get('FROM_EMAIL')
 
 SLACK_WEBHOOK_URL = env.get('SLACK_WEBHOOK_URL')
 
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 MESSAGE_TAGS = {
     messages.ERROR: 'danger'
 }
+
+MAX_DAYS_TO_PLAY = env.get('MAX_DAYS_TO_PLAY', 6)

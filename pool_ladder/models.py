@@ -3,9 +3,10 @@ from datetime import timedelta
 import pygal
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import Q, Max
+from django.db.models import Q, Max, Min
 from django.utils.timezone import now
 from pandas.tseries.offsets import BDay
 from pygal.style import CleanStyle
@@ -35,7 +36,7 @@ class UserProfile(models.Model):
         """
         determine if this user has any open challenges or has played a match in the last 4 hours
         """
-        if not self.has_open_challenge and not self.in_cool_down:
+        if not self.has_open_challenge and not self.in_cool_down and self.active:
             return True
 
         return False
@@ -81,10 +82,20 @@ class UserProfile(models.Model):
 
     @property
     def swag(self):
-        if self.rank == 1:
-            return '1f478'
-        if self.rank == UserProfile.objects.aggregate(max_rank=Max('rank'))['max_rank']:
-            return '1F4A9'
+        active_profiles = UserProfile.objects.filter(active=True)
+        swag = []
+
+        if self.rank == active_profiles.aggregate(min_rank=Min('rank'))['min_rank']:
+            swag.append('1f478')
+
+        if self.rank == active_profiles.aggregate(max_rank=Max('rank'))['max_rank']:
+            swag.append('1F4A9')
+
+        if self.movement == 100:
+            # user was balled
+            swag.append('1F3B1')
+
+        return swag
 
     def can_challenge(self, challenger):
         """
@@ -99,21 +110,46 @@ class UserProfile(models.Model):
         except UserProfile.DoesNotExist:
             return False
 
+    def can_decline(self):
+        """
+        User is able to decline if they have been challenged twice in a row (unless they are rank 1
+        """
+        can_decline = False
+
+        if self.rank == 1:
+            return can_decline
+
+        # get the last 2 matches for this user
+        matches = Match.objects.filter(Q(challenger=self.user) | Q(opponent=self.user)).order_by('-challenge_time')[:2]
+
+        user_challenged_count = 0
+
+        for match in matches:
+            if match.declined:
+                continue
+
+            if match.opponent == self.user:
+                user_challenged_count += 1
+
+        if user_challenged_count == 2:
+            can_decline = True
+
+        return can_decline
+
     def update_rank(self, rank, balled=False):
         """
         Update the rank of this profile with the given rank.
         If balled is True set rank to bottom and move everyone else below rank up
         """
         if balled:
-
-            # get all profiles below 'rank' (the losers rank) and move them up 1
-            for profile in UserProfile.objects.filter(rank__gt=rank):
-                profile.rank -= 1
-                profile.save()
-
             # get current maximum rank
             max = UserProfile.objects.aggregate(max_rank=Max('rank'))
             self.rank = max['max_rank']
+
+            # get all profiles above 'rank' (the losers rank) and move them up 1
+            for profile in UserProfile.objects.filter(rank__gt=rank):
+                profile.rank -= 1
+                profile.save()
 
             # set movement to 100 (balled)
             self.movement = 100
@@ -238,8 +274,8 @@ class Match(models.Model):
     winner_rank = models.IntegerField(null=True, blank=True)
     loser_rank = models.IntegerField(null=True, blank=True)
     played = models.DateTimeField(null=True, blank=True)
+    pending = models.BooleanField(default=False)
     declined = models.BooleanField(default=False)
-    pending = models.BooleanField(default=True)
     days_to_play = models.IntegerField(default=3)
 
     class Meta:
@@ -253,6 +289,7 @@ class Match(models.Model):
         super().save(kwargs)
 
         if self.played:
+            # played is set when results are entered so redraw the matches table
             async_to_sync(get_channel_layer().group_send)(
                 'pool_ladder',
                 {
@@ -269,23 +306,53 @@ class Match(models.Model):
             }
         )
 
-        # Notify the opponent of the challenge
-        if self.opponent.email:
+        # Notify the opponent of the challenge.
+        # only if days_to_play is the default 3 otherwise new notifications will go out each time a day is added
+        if self.days_to_play == 3 and not self.declined:
+            if self.opponent.email:
+                async_to_sync(get_channel_layer().send)(
+                    'notifications',
+                    {
+                        'type': 'email',
+                        'email': self.opponent.email,
+                        'challenger': self.challenger.username,
+                        'time_until': self.time_until.strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                )
+
             async_to_sync(get_channel_layer().send)(
                 'notifications',
                 {
-                    'type': 'email',
-                    'match_pk': self.pk,
+                    'type': 'slack',
+                    'message': '{} You have been challenged to a {} match by {}.\n'
+                               'You need to play the match by {} or you will forfeit'.format(
+                                    (
+                                        '<@{}>'.format(self.opponent.userprofile.slack_id)
+                                        if self.opponent.userprofile.slack_id
+                                        else self.opponent.username
+                                    ),
+                                    settings.LADDER_NAME,
+                                    (
+                                        '<@{}>'.format(self.challenger.userprofile.slack_id)
+                                        if self.challenger.userprofile.slack_id
+                                        else self.challenger.username
+                                    ),
+                                    self.time_until.strftime('%Y-%m-%d %H:%M:%S')
+                               )
                 }
             )
 
-        async_to_sync(get_channel_layer().send)(
-            'notifications',
-            {
-                'type': 'slack',
-                'match_pk': self.pk,
-            }
-        )
+    def can_play(self, user):
+        """
+        Check that the user can enter results for this match
+        """
+        if user == self.opponent:
+            return True
+
+        if user == self.challenger:
+            return True
+
+        return False
 
     @property
     def loser_balled(self):

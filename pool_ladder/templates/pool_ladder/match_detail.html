@@ -10,8 +10,30 @@
         <div class="col text-center">
             <h2>{{ object.challenger }} vs. {{ object.opponent }}</h2>
             <h3>{{ object.played | date }} at {{ object.played | time }}</h3>
-            <h3>{{ object.winner }} was victorious and moved up to rank {{ object.winner_rank }}</h3>
-            <h5>{{ object.loser }} dropped to rank {{ object.loser_rank }}</h5>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-6 offset-3">
+            <table id="stats" class="table table-striped table-hover table-bordered bg-light">
+                <thead class="bg-dark">
+                    <tr>
+                        <td scope="col text-center">Winner</td>
+                        <td scope="col text-center">Loser</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td scope="col">
+                            {{ object.winner }}<br />
+                            <small>Rank {% if match.winner == match.challenger %}{{ match.challenger_rank }}{% else %}{{ match.opponent_rank}}{% endif %} > {{ match.winner_rank }}</small>
+                        </td>
+                        <td scope="col">
+                            {{ object.loser }}<br />
+                            <small>Rank {% if match.loser == match.challenger %}{{ match.challenger_rank }}{% else %}{{ match.opponent_rank}}{% endif %} > {{ match.loser_rank }}</small>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
     <div class="row" style="padding-top: 10px;">

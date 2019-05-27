@@ -1,4 +1,4 @@
 {{ profile.rank }}
-{% if profile.swag %}
-    &#x{{ profile.swag }};
-{% endif %}
+{% for char in profile.swag %}
+    &#x{{ char }};
+{% endfor %}

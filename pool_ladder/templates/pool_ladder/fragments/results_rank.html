@@ -1,11 +1,15 @@
-{% if user == match.challenger %}
-    {{ match.challenger_rank }}
+{% if match.declined %}
+    ---
 {% else %}
-    {{ match.opponent_rank }}
-{% endif %}
- >
-{% if user == match.winner %}
-    {{ match.winner_rank }}
-{% else %}
-    {{ match.loser_rank }}
+    {% if user == match.challenger %}
+        {{ match.challenger_rank }}
+    {% else %}
+        {{ match.opponent_rank }}
+    {% endif %}
+     >
+    {% if user == match.winner %}
+        {{ match.winner_rank }}
+    {% else %}
+        {{ match.loser_rank }}
+    {% endif %}
 {% endif %}
