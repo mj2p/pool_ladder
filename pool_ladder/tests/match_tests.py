@@ -130,3 +130,26 @@ class MatchTestCase(TestCase):
         self.assertTrue(match.can_play(self.opponent))
         self.assertTrue(match.can_play(self.challenger))
         self.assertFalse(match.can_play(self.other_player))
+
+    def test_user_can_be_challenged_during_cool_down(self):
+        # set the ranks
+        self.opponent.userprofile.rank = 1
+        self.challenger.userprofile.rank = 2
+        self.other_player.userprofile.rank = 3
+
+        # create a match
+        match = Match.objects.create(
+            challenger=self.challenger,
+            opponent=self.opponent,
+            challenger_rank=self.challenger.userprofile.rank,
+            opponent_rank=self.opponent.userprofile.rank
+        )
+        match.start_match()
+
+        # make sure that both players are in cool down
+        self.assertTrue(self.challenger.userprofile.in_cool_down)
+        self.assertTrue(self.opponent.userprofile.in_cool_down)
+
+        # now make sure that other_player can challenge either player
+        self.assertTrue(self.opponent.userprofile.can_challenge(self.other_player))
+        self.assertTrue(self.challenger.userprofile.can_challenge(self.other_player))

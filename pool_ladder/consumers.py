@@ -114,9 +114,33 @@ class MainConsumer(JsonWebsocketConsumer):
                 return
 
             if not challenger.userprofile.is_available:
+                self.send_json(
+                    {
+                        'message_type': 'messages',
+                        'text': render_to_string(
+                            'pool_ladder/fragments/message.html',
+                            {
+                                'message': 'You are not available to make this challenge',
+                                'tag': 'danger'
+                            }
+                        )
+                    }
+                )
                 return
 
-            if not opponent.userprofile.is_available:
+            if opponent.userprofile.has_open_challenge:
+                self.send_json(
+                    {
+                        'message_type': 'messages',
+                        'text': render_to_string(
+                            'pool_ladder/fragments/message.html',
+                            {
+                                'message': '{} is already being chalenged'.format(opponent),
+                                'tag': 'danger'
+                            }
+                        )
+                    }
+                )
                 return
 
             if opponent.userprofile.can_challenge(challenger):
