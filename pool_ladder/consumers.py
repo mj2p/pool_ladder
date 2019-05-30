@@ -11,7 +11,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 
-from pool_ladder.models import Match
+from pool_ladder.models import Match, Season
 
 
 class MainConsumer(JsonWebsocketConsumer):
@@ -149,7 +149,8 @@ class MainConsumer(JsonWebsocketConsumer):
                         challenger=challenger,
                         opponent=opponent,
                         challenger_rank=challenger.userprofile.rank,
-                        opponent_rank=opponent.userprofile.rank
+                        opponent_rank=opponent.userprofile.rank,
+                        season=Season.objects.all().first()
                     )
                 except Exception as e:
                     self.send_json(

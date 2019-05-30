@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q, Max, Min
+from django.utils import timezone
 from django.utils.timezone import now
 from pandas.tseries.offsets import BDay
 from pygal.style import CleanStyle
@@ -241,9 +242,26 @@ class UserProfile(models.Model):
         )
 
 
+class Season(models.Model):
+    date_started = models.DateTimeField(default=timezone.now)
+    number = models.IntegerField(default=1)
+
+    class Meta:
+        ordering = ['-date_started']
+
+    def __str__(self):
+        return '{} <{}>'.format(self.number, self.date_started)
+
+
 class Match(models.Model):
     challenge_time = models.DateTimeField(
-        auto_now_add=True
+        default=timezone.now
+    )
+    season = models.ForeignKey(
+        Season,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
     )
     challenger = models.ForeignKey(
         User,
@@ -508,3 +526,4 @@ class Game(models.Model):
 
     class Meta:
         ordering = ['match', 'index']
+

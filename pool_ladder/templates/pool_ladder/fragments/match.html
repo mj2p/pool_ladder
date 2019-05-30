@@ -1,5 +1,8 @@
 <tr>
-    <td scope="col">{{ match.played }}</td>
+    <td scope="col">
+        {{ match.played }}<br />
+        <small>Season {{ match.season.number }}</small>
+    </td>
     <td scope="col">
         {{ match.winner }}<br />
         <small>Rank {% if match.winner == match.challenger %}{{ match.challenger_rank }}{% else %}{{ match.opponent_rank}}{% endif %} > {{ match.winner_rank }}</small>

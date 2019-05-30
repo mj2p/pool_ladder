@@ -1,3 +1,4 @@
+import random
 from math import ceil
 
 from django.conf import settings
@@ -15,7 +16,7 @@ from django.views import View
 from django.views.generic import DetailView
 
 from pool_ladder.forms import MatchForm
-from pool_ladder.models import Match, UserProfile
+from pool_ladder.models import Match, UserProfile, Season
 
 
 class IndexView(LoginRequiredMixin, View):
@@ -368,3 +369,39 @@ class PlayerResultsDataTablesView(LoginRequiredMixin, View):
                 ]
             }
         )
+
+
+class NewSeason(LoginRequiredMixin, View):
+    @staticmethod
+    def get(request):
+        """
+        This method will shuffle all player ranks and start a new season
+        """
+        if not request.user.is_superuser:
+            return HttpResponseForbidden()
+
+        # create a new season
+        # first get the latest season
+        latest_season = Season.objects.all().first()
+        Season.objects.create(number=latest_season.number + 1)
+
+        # now we shuffle the ranks
+
+        active_users = UserProfile.objects.filter(active=True)
+
+        # build a list of possible ranks
+        ranks = []
+
+        for x in range(active_users.count()):
+            ranks.append(x + 1)
+
+        # then shuffle it
+        random.shuffle(ranks)
+
+        for user in active_users:
+            user.rank = ranks[user.rank - 1]
+            user.save()
+
+        return render(request, 'pool_ladder/index.html')
+
+

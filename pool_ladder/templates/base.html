@@ -16,23 +16,30 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <div class="col">
+            <ul class="col">
                 <nav class="navbar navbar-dark bg-dark navbar-expand-md justify-content-center">
-                    <div class="col">
+                    <div class="col navbar-brand">
                         <a href="{% url 'index' %}" id="main-title" class="navbar-brand d-flex w-50 mr-auto">
                             {{ name|ladder_name }}
                         </a>
                     </div>
-                    <div class="col text-right align-text-bottom">
+                    <ul class="navbar-nav">
                         {% if user.is_impersonate %}
-                            Hi {{ user }}
+                        <li class="nav-item">Hi {{ user }}</li>
+                        {% endif %}
+                        {% if request.user.is_superuser %}
+                        <li class="nav-item">
+                            <a href="{% url 'new-season' %}" class="btn nav-link" role="button">New Season</a>
+                        </li>
                         {% endif %}
                         {% if user.is_authenticated %}
-                        <a href="{% url 'logout' %}" id="logout">
-                            logout
-                        </a>
+                        <li class="nav-item">
+                            <a href="{% url 'logout' %}" id="logout" class="nav-link">
+                                logout
+                            </a>
+                        </li>
                         {% endif %}
-                    </div>
+                    </ul>
                 </nav>
             </div>
         </div>
@@ -49,7 +56,7 @@
                 {% endblock %}
             </div>
         </div>
-    </div>
+     </div>
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs4-4.0.0/jq-3.2.1/dt-1.10.16/r-2.2.1/rr-1.2.3/sc-1.4.4/datatables.min.js"></script>
     {% block endbodyjs %}
     {% endblock %}

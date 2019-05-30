@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from pool_ladder.models import UserProfile, Match, Game
+from pool_ladder.models import UserProfile, Match, Game, Season
 
 
 @admin.register(UserProfile)
@@ -8,6 +8,11 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'rank', 'active', 'slack_id']
     raw_id_fields = ['user']
     list_editable = ['active', 'rank', 'slack_id']
+
+
+@admin.register(Season)
+class SeasonAdmin(admin.ModelAdmin):
+    list_display = ['date_started', 'number']
 
 
 @admin.register(Match)

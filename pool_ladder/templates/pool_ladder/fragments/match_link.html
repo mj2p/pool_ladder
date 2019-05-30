@@ -1,1 +1,5 @@
-<a href="{% url 'match_detail' pk=match.pk %}">{{ match.played }}</a>
+<a href="{% url 'match_detail' pk=match.pk %}">
+    {{ match.played }}
+</a>
+<br />
+<small>Season {{ match.season.number }}</small>

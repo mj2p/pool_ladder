@@ -42,5 +42,7 @@ urlpatterns = [
 
     path('ladder/datatable', views.LadderDataTablesView.as_view(), name='ladder_datatable'),
     path('challenge/datatable', views.ChallengesDataTablesView.as_view(), name='challenge_datatable'),
-    path('match/datatable', views.PlayedMatchesDataTablesView.as_view(), name='match_datatable')
+    path('match/datatable', views.PlayedMatchesDataTablesView.as_view(), name='match_datatable'),
+
+    path('new-season', views.NewSeason.as_view(), name='new-season')
 ]
