@@ -386,7 +386,6 @@ class NewSeason(LoginRequiredMixin, View):
         Season.objects.create(number=latest_season.number + 1)
 
         # now we shuffle the ranks
-
         active_users = UserProfile.objects.filter(active=True)
 
         # build a list of possible ranks
@@ -399,9 +398,14 @@ class NewSeason(LoginRequiredMixin, View):
         random.shuffle(ranks)
 
         for user in active_users:
-            user.rank = ranks[user.rank - 1]
+            new_rank = ranks[user.rank - 1]
+
+            while new_rank == user.rank:
+                random.shuffle(ranks)
+                new_rank = ranks[user.rank - 1]
+
+            user.rank = new_rank
             user.save()
 
         return render(request, 'pool_ladder/index.html')
-
 
