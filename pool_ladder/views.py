@@ -394,18 +394,14 @@ class NewSeason(LoginRequiredMixin, View):
         for x in range(active_users.count()):
             ranks.append(x + 1)
 
-        # then shuffle it
-        random.shuffle(ranks)
+        # then shuffle it a few times
+        for x in range(5):
+            random.shuffle(ranks)
 
         for user in active_users:
-            new_rank = ranks[user.rank - 1]
-
-            while new_rank == user.rank:
-                random.shuffle(ranks)
-                new_rank = ranks[user.rank - 1]
-
-            user.rank = new_rank
+            user.rank = ranks[user.rank - 1]
             user.save()
 
         return render(request, 'pool_ladder/index.html')
+
 
