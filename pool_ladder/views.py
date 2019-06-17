@@ -11,7 +11,6 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Template, Context
 from django.template.loader import get_template
-from django.utils.timezone import now
 from django.views import View
 from django.views.generic import DetailView
 
@@ -266,7 +265,7 @@ class ChallengesDataTablesView(LoginRequiredMixin, View):
         data = generic_data_tables_view(
             request,
             Match,
-            Match.objects.filter(played__isnull=True),
+            Match.objects.filter(played__isnull=True).filter(declined=False),
             paginate=False
         )
         return JsonResponse(

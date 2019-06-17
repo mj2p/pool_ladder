@@ -180,7 +180,7 @@ class MainConsumer(JsonWebsocketConsumer):
         """
         Ensure that no challenge has expired
         """
-        for challenge in Match.objects.filter(played__isnull=True):
+        for challenge in Match.objects.filter(played__isnull=True, declined=False):
             if challenge.time_until < now():
                 # challenge has timed out so the challenger automatically wins
                 challenge.start_match()
