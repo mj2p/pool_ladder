@@ -17,8 +17,10 @@ class SeasonAdmin(admin.ModelAdmin):
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
-    list_display = ['challenge_time', 'challenger', 'opponent', 'challenger_rank', 'opponent_rank', 'winner', 'loser']
+    list_display = ['challenge_time', 'challenger', 'opponent', 'challenger_rank', 'opponent_rank',
+                    'winner_rank', 'loser_rank', 'winner', 'loser']
     raw_id_fields = ['challenger', 'opponent', 'winner', 'loser']
+    list_editable= ['challenger_rank', 'opponent_rank', 'winner_rank', 'loser_rank']
 
 
 @admin.register(Game)
