@@ -48,7 +48,8 @@ class UserProfile(models.Model):
         return True if this user is in a match not yet played
         """
         return Match.objects.filter(
-            played__isnull=True
+            played__isnull=True,
+            declined=False
         ).filter(
             Q(challenger=self.user) | Q(opponent=self.user)
         ).count() > 0
