@@ -145,13 +145,27 @@ class UserProfile(models.Model):
         """
         if balled:
             # get current maximum rank
-            max = UserProfile.objects.aggregate(max_rank=Max('rank'))
+            max = UserProfile.objects.filter(active=True).aggregate(max_rank=Max('rank'))
             self.rank = max['max_rank']
 
             # get all profiles above 'rank' (the losers rank) and move them up 1
             for profile in UserProfile.objects.filter(rank__gt=rank):
                 profile.rank -= 1
                 profile.save()
+
+            # also need to alter the pending matches
+            for challenge in Match.objects.filter(
+                    played__isnull=True
+            ).filter(
+                Q(opponent__userprofile__rank__gt=rank) | Q(challenger__userprofile__rank__gt=rank)
+            ):
+                if challenge.challenger_rank > rank:
+                    challenge.challenger_rank -= 1
+
+                if challenge.opponent_rank > rank:
+                    challenge.opponent_rank -= 1
+
+                challenge.save()
 
             # set movement to 100 (balled)
             self.movement = 100

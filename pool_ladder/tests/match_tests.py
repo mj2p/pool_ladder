@@ -1,5 +1,15 @@
+from django.db.models import Max
 from django.test import TestCase
 from pool_ladder.models import User, UserProfile, Game, Match
+
+
+def create_user(rank, active=True):
+    user = User.objects.create_user(username='user_rank_{}'.format(rank), password='123456789')
+    UserProfile.objects.create(
+        user=user,
+        rank=rank,
+        active=active
+    )
 
 
 class MatchTestCase(TestCase):
@@ -153,3 +163,122 @@ class MatchTestCase(TestCase):
         # now make sure that other_player can challenge either player
         self.assertTrue(self.opponent.userprofile.can_challenge(self.other_player))
         self.assertTrue(self.challenger.userprofile.can_challenge(self.other_player))
+
+    def test_a_balling_does_all_the_right_things(self):
+        # create loads of users
+        for x in range(20):
+            rank = x + 1
+            create_user(rank)
+
+        # create a load of matches
+        opponent_rank = 1
+        challenger_rank = 2
+
+        while challenger_rank <= 20:
+            Match.objects.create(
+                challenger=User.objects.get(username='user_rank_{}'.format(challenger_rank)),
+                opponent=User.objects.get(username='user_rank_{}'.format(opponent_rank)),
+                challenger_rank=challenger_rank,
+                opponent_rank=opponent_rank
+            )
+
+            opponent_rank += 2
+            challenger_rank += 2
+
+        # the third match results in a balling
+        third_match = Match.objects.get(pk=3)
+        third_match.start_match()
+
+        game_0 = third_match.game_set.get(index=0)
+        game_0.winner = User.objects.get(username='user_rank_5')
+        game_0.balled = User.objects.get(username='user_rank_6')
+        game_0.save()
+
+        third_match.set_winner_and_loser()
+        third_match.save()
+
+        # user ranks should have altered accordingly
+        self.assertEqual(User.objects.get(username='user_rank_6').userprofile.rank, 20)
+
+        for user in User.objects.all():
+            username_parts = user.username.split('_')
+
+            if len(username_parts) < 3:
+                continue
+
+            original_rank = int(username_parts[2])
+
+            if original_rank < 6:
+                # players ranked higher than the balled player stay the same
+                self.assertEqual(user.userprofile.rank, original_rank)
+
+            if original_rank == 6:
+                # balled player is balled
+                self.assertEqual(user.userprofile.rank, 20)
+
+            if original_rank > 6:
+                # players ranked lower than the balled player all move up one
+                self.assertEqual(user.userprofile.rank, original_rank-1)
+
+        # we should also check the waiting match ranks
+
+        for match in Match.objects.filter(played__isnull=True):
+            opponent_original_rank = int(match.opponent.username.split('_')[2])
+            challenger_original_rank = int(match.challenger.username.split('_')[2])
+            
+            # do the opponent
+            if opponent_original_rank < 6:
+                # players ranked higher than the balled player stay the same
+                self.assertEqual(match.opponent_rank, opponent_original_rank)
+
+            if opponent_original_rank == 6:
+                # balled player is balled
+                self.assertEqual(match.opponent_rank, 20)
+
+            if opponent_original_rank > 6:
+                # players ranked lower than the balled player all move up one
+                self.assertEqual(match.opponent_rank, opponent_original_rank-1)
+            
+            # then the challenger
+            if challenger_original_rank < 6:
+                # players ranked higher than the balled player stay the same
+                self.assertEqual(match.challenger_rank, challenger_original_rank)
+
+            if challenger_original_rank == 6:
+                # balled player is balled
+                self.assertEqual(match.challenger_rank, 20)
+
+            if challenger_original_rank > 6:
+                # players ranked lower than the balled player all move up one
+                self.assertEqual(match.challenger_rank, challenger_original_rank-1)
+
+    def test_an_inactive_user_does_not_affect_a_balling(self):
+        # create loads of users with a couple inactive
+        for x in range(20):
+            rank = x + 1
+            create_user(rank, (rank < 18))
+
+        # create a match
+        match = Match.objects.create(
+            challenger=User.objects.get(username='user_rank_5'),
+            opponent=User.objects.get(username='user_rank_3'),
+            challenger_rank=5,
+            opponent_rank=3
+        )
+
+        # the match results in a balling
+        match.start_match()
+
+        game_0 = match.game_set.get(index=0)
+        game_0.winner = User.objects.get(username='user_rank_5')
+        game_0.balled = User.objects.get(username='user_rank_3')
+        game_0.save()
+
+        match.set_winner_and_loser()
+        match.save()
+
+        # make sure the balled players rank is
+        self.assertEqual(
+            User.objects.get(username='user_rank_3').userprofile.rank,
+            UserProfile.objects.filter(active=True).aggregate(max_rank=Max('rank'))['max_rank']
+        )
