@@ -1,0 +1,53 @@
+{
+  "name": "Pool Ladder",
+  "description": "A simple Django app to track matches in a pool ladder tournament",
+  "repository": "https://github.com/mj2p/pool_ladder",
+  "keywords": ["pool", "ladder", "tournament"],
+  "addons": [
+    {
+      "plan": "heroku-redis"
+    },
+    {
+      "plan": "heroku-postgresql",
+      "options": {
+        "version": "9.5"
+      }
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "LADDER_NAME": {
+      "description": "The name of your Pool Ladder. This is displayed on the site header.",
+      "value": "Pool Ladder"
+    },
+    "SECRET_KEY": {
+      "description": "The Django secret key used for secure signing. Keep this secret.",
+      "generator": "secret"
+    },
+    "DEBUG": {
+      "description": "Set this to `true` to enable debugging. Ensure this is `false` in production.",
+      "value": false
+    },
+    "AWS_ACCESS_KEY_ID": {
+      "description": "Key ID for AWS identity with S3/SES iAM permissions."
+    },
+    "AWS_SECRET_ACCESS_KEY": {
+      "description": "Secret Key for AWS identity with S3/SES iAM permissions."
+    },
+    "AWS_STORAGE_BUCKET_NAME": {
+      "description": "S3 Bucket name to use for static files storage."
+    },
+    "FROM_EMAIL": {
+      "description": "Email address that site mail comes from. leave blank to disable email.",
+      "required": false
+    },
+    "SLACK_WEBHOOK_URL":{
+      "description": "Slack Webhook for notifying a slack channel. https://api.slack.com/incoming-webhooks",
+      "required": false
+    }
+  }
+}
