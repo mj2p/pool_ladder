@@ -49,5 +49,8 @@
       "description": "Slack Webhook for notifying a slack channel. https://api.slack.com/incoming-webhooks",
       "required": false
     }
+  },
+  "scripts": {
+    "postdeploy": "python manage.py migrate"
   }
 }

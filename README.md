@@ -3,8 +3,8 @@
 
 [![CircleCI](https://circleci.com/gh/mj2p/pool_ladder/tree/master.svg?style=svg)](https://circleci.com/gh/mj2p/pool_ladder/tree/master)  
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/mj2p/pool_ladder/tree/master)
-
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/mj2p/pool_ladder/tree/master)  
+(post deployment, remember to run `python manage.py createsuperuser` in the Heroku shell)
 
 ## Description
 Players can challenge opponents up to 2 places above them to a match.  
