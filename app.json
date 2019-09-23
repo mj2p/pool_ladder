@@ -51,6 +51,6 @@
     }
   },
   "scripts": {
-    "postdeploy": "python manage.py migrate"
+    "postdeploy": "python manage.py migrate; python manage.py add_season_1"
   }
 }
