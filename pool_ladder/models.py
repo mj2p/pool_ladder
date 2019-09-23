@@ -199,7 +199,7 @@ class UserProfile(models.Model):
             x_label_rotation=35,
             x_title='Date Played',
             y_title='Rank',
-            range=(1, UserProfile.objects.aggregate(max_rank=Max('rank'))['max_rank']),
+            range=(1, UserProfile.objects.filter(active=True).aggregate(max_rank=Max('rank'))['max_rank']),
             inverse_y_axis=True,
             show_legend=False,
             truncate_label=-1,
@@ -516,6 +516,31 @@ class Match(models.Model):
         )
 
         return
+
+    def serialize(self):
+        """
+        json serialize the match data
+        :return:
+        """
+        match_data = {
+            'challenge_time': self.challenge_time,
+            'season': self.season.number,
+            'challenger': self.challenger.username,
+            'opponent': self.opponent.username,
+            'challenger_rank': self.challenger_rank,
+            'opponent_rank': self.opponent_rank,
+            'declined': self.declined,
+            'days_to_play': self.days_to_play
+        }
+
+        if self.played:
+            match_data['played'] = self.played
+            match_data['winner'] = self.winner.username
+            match_data['loser'] = self.loser.username
+            match_data['winner_rank'] = self.winner_rank
+            match_data['loser_rank'] = self.loser_rank
+
+        return match_data
 
 
 class Game(models.Model):
