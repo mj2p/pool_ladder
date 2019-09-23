@@ -385,22 +385,42 @@ class NewSeason(LoginRequiredMixin, View):
         Season.objects.create(number=latest_season.number + 1)
 
         # now we shuffle the ranks
-        active_users = UserProfile.objects.filter(active=True)
+        active_users = UserProfile.objects.filter(active=True).order_by('-rank')
 
-        # build a list of possible ranks
-        ranks = []
-
-        for x in range(active_users.count()):
-            ranks.append(x + 1)
-
-        # then shuffle it a few times
-        for x in range(5):
-            random.shuffle(ranks)
+        user_list = []
 
         for user in active_users:
-            user.rank = ranks[user.rank - 1]
-            user.save()
+            user_list.append({user.pk: user.rank})
 
-        return render(request, 'pool_ladder/index.html')
+        random.shuffle(user_list)
+
+        new_rank = 1
+
+        for user in user_list:
+            profile = UserProfile.objects.get(pk=list(user.keys())[0])
+            profile.rank = new_rank
+            profile.save()
+
+            new_rank += 1
+
+        return redirect('index')
+
+
+class MatchData(LoginRequiredMixin, View):
+    @staticmethod
+    def get(request, season):
+        """
+        Return serialized match data
+        type can be json or anything else which defaults to csv
+        """
+        if season == 'all' or season == 0:
+            matches = Match.objects.all()
+        else:
+            season_obj = get_object_or_404(Season, number=season)
+            matches = Match.objects.filter(season=season_obj)
+
+        data = [match.serialize() for match in matches]
+        return JsonResponse(data, safe=False)
+
 
 

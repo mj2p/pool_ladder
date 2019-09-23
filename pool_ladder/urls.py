@@ -44,5 +44,6 @@ urlpatterns = [
     path('challenge/datatable', views.ChallengesDataTablesView.as_view(), name='challenge_datatable'),
     path('match/datatable', views.PlayedMatchesDataTablesView.as_view(), name='match_datatable'),
 
-    path('new-season', views.NewSeason.as_view(), name='new-season')
+    path('new-season', views.NewSeason.as_view(), name='new-season'),
+    path('match-data/<int:season>', views.MatchData.as_view(), name='match-data'),
 ]
