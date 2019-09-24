@@ -540,6 +540,17 @@ class Match(models.Model):
             match_data['winner_rank'] = self.winner_rank
             match_data['loser_rank'] = self.loser_rank
 
+            match_data['games'] = []
+
+            for game in self.game_set.all():
+                match_data['games'].append(
+                    {
+                        'index': game.index,
+                        'winner': game.winner.username if game.winner else None,
+                        'balled': game.balled.username if game.balled else None
+                    }
+                )
+
         return match_data
 
 
