@@ -416,33 +416,33 @@ class MatchData(View):
         Return serialized match data
         type can be json or anything else which defaults to csv
         """
-        if 'Http-Auth-Token' not in request.headers:
-            print('no token header')
-            print(request.headers)
-            return HttpResponseForbidden()
-
-        auth = request.headers['Http-Auth-Token'].split()
-
-        if len(auth) != 2:
-            print('header wrong length')
-            return HttpResponseForbidden()
-
-        if auth[0].lower() != "pool-token":
-            print('no pool-token')
-            return HttpResponseForbidden()
-
-        token = auth[1]
-
         try:
             secret_token = settings.DATA_SECRET_TOKEN
         except AttributeError:
-            return HttpResponseForbidden()
+            secret_token = None
 
-        print(token, secret_token)
+        if secret_token is not None:
 
-        if secret_token is None or token != secret_token:
-            print('mismatch token')
-            return HttpResponseForbidden()
+            if 'Http-Auth-Token' not in request.headers:
+                print('no token header')
+                print(request.headers)
+                return HttpResponseForbidden()
+
+            auth = request.headers['Http-Auth-Token'].split()
+
+            if len(auth) != 2:
+                print('header wrong length')
+                return HttpResponseForbidden()
+
+            if auth[0].lower() != "pool-token":
+                print('no pool-token')
+                return HttpResponseForbidden()
+
+            token = auth[1]
+
+            if secret_token is None or token != secret_token:
+                print('mismatch token')
+                return HttpResponseForbidden()
 
         if season == 'all' or season == 0:
             matches = Match.objects.all()
