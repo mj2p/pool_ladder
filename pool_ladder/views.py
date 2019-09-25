@@ -1,8 +1,11 @@
+import base64
+import hashlib
 import random
 from math import ceil
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -406,13 +409,41 @@ class NewSeason(LoginRequiredMixin, View):
         return redirect('index')
 
 
-class MatchData(LoginRequiredMixin, View):
+class MatchData(View):
     @staticmethod
     def get(request, season):
         """
         Return serialized match data
         type can be json or anything else which defaults to csv
         """
+        if 'Http-Auth-Token' not in request.headers:
+            print('no token header')
+            print(request.headers)
+            return HttpResponseForbidden()
+
+        auth = request.headers['Http-Auth-Token'].split()
+
+        if len(auth) != 2:
+            print('header wrong length')
+            return HttpResponseForbidden()
+
+        if auth[0].lower() != "pool-token":
+            print('no pool-token')
+            return HttpResponseForbidden()
+
+        token = auth[1]
+
+        try:
+            secret_token = settings.DATA_SECRET_TOKEN
+        except AttributeError:
+            return HttpResponseForbidden()
+
+        print(token, secret_token)
+
+        if secret_token is None or token != secret_token:
+            print('mismatch token')
+            return HttpResponseForbidden()
+
         if season == 'all' or season == 0:
             matches = Match.objects.all()
         else:

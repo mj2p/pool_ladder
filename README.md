@@ -21,6 +21,7 @@ If a player is "balled" (loses with all their balls still on the table) they mov
 * Players that have been challenged can extend the match time out.
 * If a player has been challenged twice in a row, they can decline the next challenge.
 * Runs on Heroku
+* Progamatically fetch match data from the <url>/match-data/<season_id or '0' for all > endpoint (use shared secret as declared in variables below)
 
 ## Installation
 #### Basic App
@@ -47,16 +48,17 @@ As seen in the commands above, the main configuration is from environment variab
 There is a portion of code in settings.py that loads variables from a json file called `.env` in the project root
 This file should contain the following keys:
 
-DATABASE_URL: Database URL in format expected by [dj-database-url](https://github.com/jacobian/dj-database-url#url-schema)    
-REDIS_URL: The URL where Redis can be reached (usually `redis://localhost:6379`)  
-LADDER_NAME: The name of your Pool Ladder. This is displayed on the site header.  
-SECRET_KEY: The Django secret key used for secure signing. Keep this secret.  
-DEBUG: Set this to `true` to enable debugging. Ensure this is `false` in production.   
-AWS_ACCESS_KEY_ID: Key ID for AWS identity with S3/SES access.  
-AWS_SECRET_ACCESS_KEY: Secret Key for AWS identity with S3/SES access.  
-AWS_STORAGE_BUCKET_NAME: S3 Bucket name to use for static files storage.  
-FROM_EMAIL: (optional) Email address that site mail comes from. leave blank to disable email.  
-SLACK_WEBHOOK_URL: (optional) Slack [Webhook](https://api.slack.com/incoming-webhooks) for notifying a slack channel.  
+`DATABASE_URL`: Database URL in format expected by [dj-database-url](https://github.com/jacobian/dj-database-url#url-schema)    
+`REDIS_URL`: The URL where Redis can be reached (usually `redis://localhost:6379`)  
+`LADDER_NAME`: The name of your Pool Ladder. This is displayed on the site header.  
+`SECRET_KEY`: The Django secret key used for secure signing. Keep this secret.  
+`DEBUG`: Set this to `true` to enable debugging. Ensure this is `false` in production.   
+`AWS_ACCESS_KEY_ID`: Key ID for AWS identity with S3/SES access.  
+`AWS_SECRET_ACCESS_KEY`: Secret Key for AWS identity with S3/SES access.  
+`AWS_STORAGE_BUCKET_NAME`: S3 Bucket name to use for static files storage.  
+`FROM_EMAIL`: (optional) Email address that site mail comes from. leave blank to disable email.  
+`SLACK_WEBHOOK_URL`: (optional) Slack [Webhook](https://api.slack.com/incoming-webhooks) for notifying a slack channel.  
+`DATA_SECRET_TOKEN`: (optional) Secret to use for getting match data programatically. A header should be passed with a request like this `'HTTP-AUTH-TOKEN': 'pool-token {}'.format(secret_token)'`
 
 
 

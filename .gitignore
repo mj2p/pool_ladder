@@ -5,3 +5,4 @@ ve/
 .env_source
 __pycache__/
 *.rdb
+test_client.py

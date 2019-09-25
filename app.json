@@ -48,6 +48,10 @@
     "SLACK_WEBHOOK_URL":{
       "description": "Slack Webhook for notifying a slack channel. https://api.slack.com/incoming-webhooks",
       "required": false
+    },
+    "DATA_SECRET_TOKEN": {
+      "description": "Shared secret for fetching match data.",
+      "generator": "secret"
     }
   },
   "scripts": {
